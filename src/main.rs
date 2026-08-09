@@ -464,14 +464,16 @@ async fn main() {
     // Screenshot harness: when DUNGEON_MANAGER_CAPTURE_PATH is set, load
     // resources synchronously, seed a scene, simulate deterministic frames,
     // write a PNG, and exit.
-    if let Some(config) = capture::CaptureConfig::from_env("DUNGEON_MANAGER") {
+    if let Some(configs) = capture::CaptureConfig::all_from_env("DUNGEON_MANAGER") {
         game.load_resources().await;
-        game.begin_capture_scene(&config.scene);
-        capture::run_capture(&config, |dt| {
-            game.update(dt);
-            game.draw();
-        })
-        .await;
+        for config in configs {
+            game.begin_capture_scene(&config.scene);
+            capture::run_capture_once(&config, |dt| {
+                game.update(dt);
+                game.draw();
+            })
+            .await;
+        }
         return;
     }
 
