@@ -259,7 +259,7 @@ pub struct AbilityEffectData {
 }
 
 pub fn load_game_config() -> Result<GameConfig, Box<dyn Error>> {
-    let json_content = include_str!("../../assets/data/game_config.json");
+    let json_content = macroquad_toolkit::include_json_str!("../../assets/data/game_config.json");
     let config: GameConfig = serde_json::from_str(json_content)?;
     Ok(config)
 }

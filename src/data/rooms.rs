@@ -161,7 +161,7 @@ pub fn room_tile_type(data_id: &str) -> &str {
 }
 
 pub fn load_rooms() -> Result<HashMap<String, RoomData>, Box<dyn Error>> {
-    let json_content = include_str!("../../assets/data/rooms.json");
+    let json_content = macroquad_toolkit::include_json_str!("../../assets/data/rooms.json");
     let rooms_vec: Vec<RoomData> = serde_json::from_str(json_content)?;
 
     let mut rooms_map = HashMap::new();
@@ -172,7 +172,8 @@ pub fn load_rooms() -> Result<HashMap<String, RoomData>, Box<dyn Error>> {
     // Load special rooms (Dungeon Heart etc)
     // Note: Use std::fs::read_to_string if file might not exist at compile time, but here we expect it.
     // Ideally use include_str! if we want it embedded.
-    let special_json_content = include_str!("../../assets/data/special_rooms.json");
+    let special_json_content =
+        macroquad_toolkit::include_json_str!("../../assets/data/special_rooms.json");
     let special_rooms_vec: Vec<RoomData> = serde_json::from_str(special_json_content)?;
 
     for room in special_rooms_vec {

@@ -69,12 +69,14 @@ pub fn load_hero_buildings() -> Result<HashMap<String, HeroBuildingData>, Box<dy
     let json_content = {
         #[cfg(target_arch = "wasm32")]
         {
-            include_str!("../../assets/data/hero_buildings.json").to_string()
+            macroquad_toolkit::include_json_str!("../../assets/data/hero_buildings.json")
+                .to_string()
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
             std::fs::read_to_string("assets/data/hero_buildings.json").unwrap_or_else(|_| {
-                include_str!("../../assets/data/hero_buildings.json").to_string()
+                macroquad_toolkit::include_json_str!("../../assets/data/hero_buildings.json")
+                    .to_string()
             })
         }
     };

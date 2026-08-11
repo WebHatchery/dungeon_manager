@@ -95,7 +95,7 @@ pub struct HeroVisualData {
 }
 
 pub fn load_heroes() -> Result<HashMap<String, HeroData>, Box<dyn Error>> {
-    let json_content = include_str!("../../assets/data/heroes.json");
+    let json_content = macroquad_toolkit::include_json_str!("../../assets/data/heroes.json");
     let heroes_vec: Vec<HeroData> = serde_json::from_str(json_content)?;
 
     let mut heroes_map = HashMap::new();
@@ -107,20 +107,4 @@ pub fn load_heroes() -> Result<HashMap<String, HeroData>, Box<dyn Error>> {
 }
 
 #[cfg(test)]
-mod tests {
-    use crate::data::GameData;
-
-    #[test]
-    fn orphan_sprite_heroes_are_wired() {
-        let game_data = GameData::load().expect("game data should load");
-        // The three previously-orphaned hero sprites now have data entries.
-        for id in ["peasant", "champion", "dragon_knight"] {
-            let hero = game_data
-                .heroes
-                .get(id)
-                .unwrap_or_else(|| panic!("{id} should be in the hero roster"));
-            assert!(!hero.name.is_empty());
-            assert!(hero.stats.health > 0.0);
-        }
-    }
-}
+mod tests;

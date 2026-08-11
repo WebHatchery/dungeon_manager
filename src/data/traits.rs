@@ -100,12 +100,13 @@ pub fn load_traits() -> Result<HashMap<String, TraitData>, Box<dyn Error>> {
     let json_content = {
         #[cfg(target_arch = "wasm32")]
         {
-            include_str!("../../assets/data/traits.json").to_string()
+            macroquad_toolkit::include_json_str!("../../assets/data/traits.json").to_string()
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
-            std::fs::read_to_string("assets/data/traits.json")
-                .unwrap_or_else(|_| include_str!("../../assets/data/traits.json").to_string())
+            std::fs::read_to_string("assets/data/traits.json").unwrap_or_else(|_| {
+                macroquad_toolkit::include_json_str!("../../assets/data/traits.json").to_string()
+            })
         }
     };
 

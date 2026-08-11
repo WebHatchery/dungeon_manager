@@ -1,9 +1,9 @@
 //! Build script: generate an embedded manifest of every campaign/scenario/map JSON.
 //!
-//! Base-game content used to be pulled in with a single hardcoded `include_str!`
+//! Base-game content used to be pulled in with a single hardcoded JSON include
 //! per loader (one campaign, one scenario), so adding a mission meant editing
 //! Rust. Instead we scan `assets/campaigns/`, `assets/scenarios/`, and
-//! `assets/maps/` here at build time and emit `include_str!`-backed arrays. The
+//! `assets/maps/` here at build time and emit toolkit-backed JSON arrays. The
 //! result:
 //!   - WASM builds get every file embedded automatically (the "WASM embedded
 //!     manifest") — add a file, rebuild, it ships.
@@ -48,7 +48,7 @@ fn main() {
     fs::write(&dest, generated).expect("write embedded_content.rs");
 }
 
-/// Emit `pub static <const_name>: &[&str] = &[ include_str!(...), ... ];` for
+/// Emit a static array of toolkit-embedded JSON strings for
 /// every `*.json` in `<manifest_dir>/<rel>`, sorted for deterministic output.
 fn emit_dir(out: &mut String, manifest_dir: &str, rel: &str, const_name: &str) {
     let dir = Path::new(manifest_dir).join(rel);
@@ -66,9 +66,11 @@ fn emit_dir(out: &mut String, manifest_dir: &str, rel: &str, const_name: &str) {
     for path in &json_files {
         // ...and whenever any embedded file's contents change.
         println!("cargo:rerun-if-changed={}", path.display());
-        // include_str! accepts forward slashes on every platform.
+        // The toolkit JSON include accepts forward slashes on every platform.
         let literal = path.to_string_lossy().replace('\\', "/");
-        out.push_str(&format!("    include_str!(\"{literal}\"),\n"));
+        out.push_str(&format!(
+            "    macroquad_toolkit::include_json_str!(\"{literal}\"),\n"
+        ));
     }
     out.push_str("];\n\n");
 }
@@ -97,7 +99,7 @@ fn emit_dir_by_filename(out: &mut String, manifest_dir: &str, rel: &str, const_n
             .expect("map file name");
         let literal = path.to_string_lossy().replace('\\', "/");
         out.push_str(&format!(
-            "    (\"{filename}\", include_str!(\"{literal}\")),\n"
+            "    (\"{filename}\", macroquad_toolkit::include_json_str!(\"{literal}\")),\n"
         ));
     }
     out.push_str("];\n\n");

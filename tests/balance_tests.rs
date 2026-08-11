@@ -159,32 +159,32 @@ mod data {
     }
 
     pub fn load_monsters() -> HashMap<String, MonsterData> {
-        let json = include_str!("../assets/data/monsters.json");
+        let json = macroquad_toolkit::include_json_str!("../assets/data/monsters.json");
         let list: Vec<MonsterData> =
             serde_json::from_str(json).expect("Failed to parse monsters.json");
         list.into_iter().map(|m| (m.id.clone(), m)).collect()
     }
 
     pub fn load_heroes() -> HashMap<String, HeroData> {
-        let json = include_str!("../assets/data/heroes.json");
+        let json = macroquad_toolkit::include_json_str!("../assets/data/heroes.json");
         let list: Vec<HeroData> = serde_json::from_str(json).expect("Failed to parse heroes.json");
         list.into_iter().map(|h| (h.id.clone(), h)).collect()
     }
 
     pub fn load_rooms() -> HashMap<String, RoomData> {
-        let json = include_str!("../assets/data/rooms.json");
+        let json = macroquad_toolkit::include_json_str!("../assets/data/rooms.json");
         let list: Vec<RoomData> = serde_json::from_str(json).expect("Failed to parse rooms.json");
         list.into_iter().map(|r| (r.id.clone(), r)).collect()
     }
 
     pub fn load_traps() -> HashMap<String, TrapData> {
-        let json = include_str!("../assets/data/traps.json");
+        let json = macroquad_toolkit::include_json_str!("../assets/data/traps.json");
         let list: Vec<TrapData> = serde_json::from_str(json).expect("Failed to parse traps.json");
         list.into_iter().map(|t| (t.id.clone(), t)).collect()
     }
 
     pub fn load_config() -> GameConfig {
-        let json = include_str!("../assets/data/game_config.json");
+        let json = macroquad_toolkit::include_json_str!("../assets/data/game_config.json");
         serde_json::from_str(json).expect("Failed to parse game_config.json")
     }
 }
