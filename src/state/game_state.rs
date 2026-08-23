@@ -343,7 +343,7 @@ impl GameState {
         // Drain anything the engine layers wanted the player to know. They
         // hold `&mut PlayerState` but not the notification manager, so this is
         // their only route to the screen.
-        let pending: Vec<String> = self.player.pending_messages.drain(..).collect();
+        let pending = std::mem::take(&mut self.player.pending_messages);
         for message in pending {
             self.notifications.warning(message);
         }

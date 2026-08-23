@@ -238,9 +238,7 @@ impl DepthBuffer {
 
     /// Clear the depth buffer
     pub fn clear(&mut self) {
-        for d in &mut self.data {
-            *d = f32::NEG_INFINITY;
-        }
+        self.data.fill(f32::NEG_INFINITY);
     }
 }
 
