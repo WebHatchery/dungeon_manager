@@ -3,6 +3,28 @@ use crate::engine::input_handlers;
 use crate::state::tile_state::Ownership;
 
 #[test]
+fn map_loading_preserves_embedded_fallback_and_rejects_corrupt_overrides() {
+    let root = std::env::temp_dir().join(format!("dungeon-map-loader-{}", std::process::id()));
+    std::fs::create_dir_all(&root).unwrap();
+    let path = root.join("level_1.json");
+    let path_text = path.to_str().unwrap();
+    let embedded = read_map_data(path_text).expect("missing runtime map uses embedded filename");
+    assert!(embedded.width > 1);
+    std::fs::write(&path, r#"{"name":"override","description":"fixture","width":1,"height":1,"tiles":["x"],"legend":{"x":"rock"}}"#).unwrap();
+    let runtime = read_map_data(path_text).expect("valid runtime map overrides embedded data");
+    assert_eq!(runtime.name, "override");
+    assert_eq!(runtime.width, 1);
+    std::fs::write(&path, "invalid map JSON").unwrap();
+    let error = match read_map_data(path_text) {
+        Ok(_) => panic!("corrupt runtime map must not fall back"),
+        Err(error) => error,
+    };
+    assert!(error.to_string().contains("level_1.json"));
+    std::fs::remove_file(path).unwrap();
+    std::fs::remove_dir(root).unwrap();
+}
+
+#[test]
 fn file_map_claims_walkable_floor_around_player_heart() {
     let game_data = GameData::load().expect("game data should load");
     let mut entities = EntityManager::new();

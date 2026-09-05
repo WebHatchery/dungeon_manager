@@ -97,20 +97,13 @@ fn one() -> f32 {
 }
 
 pub fn load_traits() -> Result<HashMap<String, TraitData>, Box<dyn Error>> {
-    let json_content = {
-        #[cfg(target_arch = "wasm32")]
-        {
-            macroquad_toolkit::include_json_str!("../../assets/data/traits.json").to_string()
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            std::fs::read_to_string("assets/data/traits.json").unwrap_or_else(|_| {
-                macroquad_toolkit::include_json_str!("../../assets/data/traits.json").to_string()
-            })
-        }
-    };
+    let json_content_result = macroquad_toolkit::data_loader::load_json_file_with_fallback_sync(
+        "assets/data/traits.json",
+        macroquad_toolkit::include_json_str!("../../assets/data/traits.json"),
+        macroquad_toolkit::data_loader::JsonFallbackPolicy::ReadError,
+    );
 
-    let traits_vec: Vec<TraitData> = serde_json::from_str(&json_content)?;
+    let traits_vec: Vec<TraitData> = json_content_result?;
 
     let mut traits_map = HashMap::new();
     for trait_data in traits_vec {

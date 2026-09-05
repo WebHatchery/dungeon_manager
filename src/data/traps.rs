@@ -40,8 +40,8 @@ pub struct TrapEffects {
 }
 
 pub fn load_traps() -> Result<HashMap<String, TrapData>, Box<dyn Error>> {
-    let json_content = macroquad_toolkit::include_json_str!("../../assets/data/traps.json");
-    let traps_vec: Vec<TrapData> = serde_json::from_str(json_content)?;
+    let traps_vec: Vec<TrapData> =
+        macroquad_toolkit::include_json!("../../assets/data/traps.json")?;
 
     let mut traps_map = HashMap::new();
     for trap in traps_vec {

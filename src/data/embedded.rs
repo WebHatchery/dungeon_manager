@@ -6,7 +6,7 @@
 //! filename/content pairs, since maps are looked up by path rather than
 //! merged by id). This is the "WASM embedded manifest": on `wasm32` there is
 //! no filesystem, so these arrays are the only content source. On native
-//! builds `data::content_source` overlays a runtime directory scan on top for
+//! builds the toolkit registry overlays a runtime directory scan on top for
 //! campaigns/scenarios, and `state::map_loader` falls back to `EMBEDDED_MAPS`
 //! when a requested map path isn't found on disk.
 

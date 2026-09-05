@@ -44,21 +44,13 @@ pub fn tech_unlocking_room<'a>(
 }
 
 pub fn load_technologies() -> Result<HashMap<String, TechData>, Box<dyn Error>> {
-    let json_content = {
-        #[cfg(target_arch = "wasm32")]
-        {
-            macroquad_toolkit::include_json_str!("../../assets/data/technologies.json").to_string()
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            std::fs::read_to_string("assets/data/technologies.json").unwrap_or_else(|_| {
-                macroquad_toolkit::include_json_str!("../../assets/data/technologies.json")
-                    .to_string()
-            })
-        }
-    };
+    let json_content_result = macroquad_toolkit::data_loader::load_json_file_with_fallback_sync(
+        "assets/data/technologies.json",
+        macroquad_toolkit::include_json_str!("../../assets/data/technologies.json"),
+        macroquad_toolkit::data_loader::JsonFallbackPolicy::ReadError,
+    );
 
-    let techs_vec: Vec<TechData> = serde_json::from_str(&json_content)?;
+    let techs_vec: Vec<TechData> = json_content_result?;
 
     let mut techs_map = HashMap::new();
     for tech in techs_vec {

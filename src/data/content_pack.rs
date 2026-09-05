@@ -6,7 +6,6 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 pub trait Identified {
@@ -135,13 +134,11 @@ pub struct ContentPackReport {
 }
 
 pub fn load_manifest(path: &Path) -> Result<ContentPackManifest, Box<dyn Error>> {
-    let json = fs::read_to_string(path)?;
-    Ok(serde_json::from_str(&json)?)
+    Ok(macroquad_toolkit::data_loader::load_json_file_sync(path)?)
 }
 
 pub fn load_order(path: &Path) -> Result<ContentPackLoadOrder, Box<dyn Error>> {
-    let json = fs::read_to_string(path)?;
-    Ok(serde_json::from_str(&json)?)
+    Ok(macroquad_toolkit::data_loader::load_json_file_sync(path)?)
 }
 
 pub fn load_manifests_from_order(
@@ -280,18 +277,13 @@ where
 {
     for file in files {
         let path = root.join(file);
-        let items: Vec<T> = read_json_array(&path)?;
+        let items: Vec<T> = macroquad_toolkit::data_loader::load_json_file_sync(&path)?;
         let item_report = merge_items(target, items);
         report.replaced_ids.extend(item_report.replaced_ids);
         report.added_ids.extend(item_report.added_ids);
     }
 
     Ok(())
-}
-
-fn read_json_array<T: DeserializeOwned>(path: &Path) -> Result<Vec<T>, Box<dyn Error>> {
-    let json = fs::read_to_string(path)?;
-    Ok(serde_json::from_str(&json)?)
 }
 
 #[cfg(test)]

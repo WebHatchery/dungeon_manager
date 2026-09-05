@@ -370,17 +370,18 @@ impl ScenarioDefinition {
 /// of `assets/scenarios/` overlaid so a dropped-in mission loads without a
 /// rebuild. Adding a scenario is pure content work — no code changes.
 pub fn load_scenarios() -> Result<HashMap<String, ScenarioDefinition>, Box<dyn Error>> {
-    let mut scenarios = crate::data::content_source::from_embedded(
+    let mut scenarios = macroquad_toolkit::data_loader::DataRegistry::from_embedded_arrays(
+        "scenarios",
         crate::data::embedded::EMBEDDED_SCENARIOS,
         |scenario: &ScenarioDefinition| scenario.meta.id.clone(),
     )?;
-    #[cfg(not(target_arch = "wasm32"))]
-    crate::data::content_source::overlay_from_disk(
-        &mut scenarios,
-        "assets/scenarios",
+    for diagnostic in scenarios.overlay_json_directories(
+        &crate::data::content_source::candidate_dirs("assets/scenarios"),
         |scenario: &ScenarioDefinition| scenario.meta.id.clone(),
-    );
-    Ok(scenarios)
+    ) {
+        eprintln!("[content] skipping invalid source: {diagnostic}");
+    }
+    Ok(scenarios.into_map())
 }
 
 fn check_keys<'a>(

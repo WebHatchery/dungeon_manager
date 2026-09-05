@@ -79,33 +79,30 @@ pub struct MapRivalKeeper {
 /// all, so this goes straight to the embedded copy. This is also what makes
 /// it safe to zip `assets/maps` on publish: nothing needs the loose files to
 /// still exist on disk.
-fn read_map_content(path: &str) -> Result<String, Box<dyn Error>> {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        if let Ok(content) = std::fs::read_to_string(path) {
-            return Ok(content);
-        }
-    }
-
+fn read_map_data(path: &str) -> Result<MapFile, Box<dyn Error>> {
     let filename = std::path::Path::new(path)
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| format!("invalid map path: {path}"))?;
-
-    crate::data::embedded::EMBEDDED_MAPS
+    let embedded = crate::data::embedded::EMBEDDED_MAPS
         .iter()
         .find(|(name, _)| *name == filename)
-        .map(|(_, content)| content.to_string())
-        .ok_or_else(|| format!("map not found on disk or embedded: {path}").into())
+        .map(|(_, content)| *content)
+        .unwrap_or("");
+    Ok(
+        macroquad_toolkit::data_loader::load_json_file_with_fallback_sync(
+            path,
+            embedded,
+            macroquad_toolkit::data_loader::JsonFallbackPolicy::ReadError,
+        )?,
+    )
 }
-
 pub fn load_map(
     path: &str,
     game_data: &GameData,
     entities: &mut EntityManager,
 ) -> Result<Dungeon, Box<dyn Error>> {
-    let json_content = read_map_content(path)?;
-    let map_data: MapFile = serde_json::from_str(&json_content)?;
+    let map_data = read_map_data(path)?;
 
     // Validate dimensions
     if map_data.tiles.len() != map_data.height {
@@ -215,8 +212,7 @@ pub fn load_map(
 }
 
 pub fn load_rival_keeper_runtime(path: &str) -> Result<RivalKeeperRuntime, Box<dyn Error>> {
-    let json_content = read_map_content(path)?;
-    let map_data: MapFile = serde_json::from_str(&json_content)?;
+    let map_data = read_map_data(path)?;
     Ok(rival_keeper_runtime_from_map(&map_data))
 }
 

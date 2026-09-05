@@ -95,8 +95,8 @@ pub struct HeroVisualData {
 }
 
 pub fn load_heroes() -> Result<HashMap<String, HeroData>, Box<dyn Error>> {
-    let json_content = macroquad_toolkit::include_json_str!("../../assets/data/heroes.json");
-    let heroes_vec: Vec<HeroData> = serde_json::from_str(json_content)?;
+    let heroes_vec: Vec<HeroData> =
+        macroquad_toolkit::include_json!("../../assets/data/heroes.json")?;
 
     let mut heroes_map = HashMap::new();
     for hero in heroes_vec {

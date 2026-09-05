@@ -76,9 +76,8 @@ pub struct SpellVisualData {
 }
 
 pub fn load_spells() -> Result<HashMap<String, SpellData>, Box<dyn Error>> {
-    let json_content =
-        macroquad_toolkit::include_json_str!("../../assets/data/dungeon_spells.json");
-    let spells_vec: Vec<SpellData> = serde_json::from_str(json_content)?;
+    let spells_vec: Vec<SpellData> =
+        macroquad_toolkit::include_json!("../../assets/data/dungeon_spells.json")?;
 
     let mut spells_map = HashMap::new();
     for spell in spells_vec {

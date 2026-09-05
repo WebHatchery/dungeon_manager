@@ -103,8 +103,8 @@ pub struct MonsterVisualData {
 }
 
 pub fn load_monsters() -> Result<HashMap<String, MonsterData>, Box<dyn Error>> {
-    let json_content = macroquad_toolkit::include_json_str!("../../assets/data/monsters.json");
-    let monsters_vec: Vec<MonsterData> = serde_json::from_str(json_content)?;
+    let monsters_vec: Vec<MonsterData> =
+        macroquad_toolkit::include_json!("../../assets/data/monsters.json")?;
 
     let mut monsters_map = HashMap::new();
     for monster in monsters_vec {

@@ -195,17 +195,18 @@ pub struct MissionMenuEntry {
 /// of `assets/campaigns/` overlaid so a dropped-in campaign loads without a
 /// rebuild. Adding a campaign is pure content work — no code changes.
 pub fn load_campaigns() -> Result<HashMap<String, CampaignDefinition>, Box<dyn Error>> {
-    let mut campaigns = crate::data::content_source::from_embedded(
+    let mut campaigns = macroquad_toolkit::data_loader::DataRegistry::from_embedded_arrays(
+        "campaigns",
         crate::data::embedded::EMBEDDED_CAMPAIGNS,
         |campaign: &CampaignDefinition| campaign.id.clone(),
     )?;
-    #[cfg(not(target_arch = "wasm32"))]
-    crate::data::content_source::overlay_from_disk(
-        &mut campaigns,
-        "assets/campaigns",
+    for diagnostic in campaigns.overlay_json_directories(
+        &crate::data::content_source::candidate_dirs("assets/campaigns"),
         |campaign: &CampaignDefinition| campaign.id.clone(),
-    );
-    Ok(campaigns)
+    ) {
+        eprintln!("[content] skipping invalid source: {diagnostic}");
+    }
+    Ok(campaigns.into_map())
 }
 
 #[cfg(test)]

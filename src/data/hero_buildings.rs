@@ -66,23 +66,14 @@ pub struct BuildingVisual {
 }
 
 pub fn load_hero_buildings() -> Result<HashMap<String, HeroBuildingData>, Box<dyn Error>> {
-    let json_content = {
-        #[cfg(target_arch = "wasm32")]
-        {
-            macroquad_toolkit::include_json_str!("../../assets/data/hero_buildings.json")
-                .to_string()
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            std::fs::read_to_string("assets/data/hero_buildings.json").unwrap_or_else(|_| {
-                macroquad_toolkit::include_json_str!("../../assets/data/hero_buildings.json")
-                    .to_string()
-            })
-        }
-    };
+    let json_content_result = macroquad_toolkit::data_loader::load_json_file_with_fallback_sync(
+        "assets/data/hero_buildings.json",
+        macroquad_toolkit::include_json_str!("../../assets/data/hero_buildings.json"),
+        macroquad_toolkit::data_loader::JsonFallbackPolicy::ReadError,
+    );
 
     // The JSON is an array of objects
-    let buildings_list: Vec<HeroBuildingData> = serde_json::from_str(&json_content)?;
+    let buildings_list: Vec<HeroBuildingData> = json_content_result?;
 
     let mut buildings_map = HashMap::new();
     for building in buildings_list {
