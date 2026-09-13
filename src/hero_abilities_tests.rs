@@ -10,6 +10,7 @@ use std::collections::HashSet;
 fn passive_ability_fires_and_sets_cooldown() {
     let game_data = GameData::load().expect("game data should load");
     let mut game_state = GameState::new(20, 20, &game_data);
+    game_state.entities = crate::state::entities::EntityManager::new();
 
     // scout's "detect_traps" ability: passive -> reveal_map around itself
     let hero = HeroState::new(
@@ -92,6 +93,7 @@ fn on_low_health_ability_heals_self() {
 fn in_room_ability_only_fires_in_matching_room_type() {
     let game_data = GameData::load().expect("game data should load");
     let mut game_state = GameState::new(20, 20, &game_data);
+    game_state.entities = crate::state::entities::EntityManager::new();
 
     // rogue's "sabotage" ability: trigger "in_room:workshop" -> damage
     let hero = HeroState::new(
@@ -104,6 +106,10 @@ fn in_room_ability_only_fires_in_matching_room_type() {
         1,
     );
     let hero_id = game_state.entities.spawn_hero(TilePos::new(3, 3), hero);
+    // Keep the unrelated opening-strike trigger from changing this room-only
+    // test; the ability system uses the live damage timestamp as its stealth
+    // signal.
+    game_state.entities.get_mut(hero_id).unwrap().last_damage_time = 0.0;
 
     let mut creature = CreatureState::new("goblin".to_string(), 1, 100.0, 10.0, 2);
     creature.health = 100.0;
@@ -195,4 +201,85 @@ fn undead_trait_drives_turn_undead_ability() {
             .any(|e| e.effect_type == "stun"),
         "turn_undead should stun a nearby undead creature"
     );
+}
+
+#[test]
+fn authored_environment_and_stealth_triggers_fire() {
+    let game_data = GameData::load().expect("game data should load");
+    let mut game_state = GameState::new(20, 20, &game_data);
+    game_state.entities = crate::state::entities::EntityManager::new();
+
+    let wizard_pos = TilePos::new(4, 4);
+    let wizard_id = game_state.entities.spawn_hero(
+        wizard_pos,
+        HeroState::new("wizard".to_string(), 1, 100.0, 10.0, wizard_pos, 1.0, 1),
+    );
+    game_state.dungeon.get_tile_mut(wizard_pos).unwrap().trap = Some(
+        crate::state::tile_state::TrapState {
+            trap_type: "spike_trap".to_string(),
+            constructed: true,
+            construction_progress: 1.0,
+            active: true,
+            funded: true,
+            cooldown: 0.0,
+            triggered: false,
+        },
+    );
+    update_hero_abilities(&mut game_state, &game_data, 1.0);
+    let wizard = game_state.entities.get(wizard_id).unwrap().as_hero().unwrap();
+    assert!(wizard.ability_cooldowns.contains_key("teleport"));
+    assert!(wizard.movement_speed > 1.5);
+
+    let cleric_pos = TilePos::new(8, 8);
+    let cleric_id = game_state.entities.spawn_hero(
+        cleric_pos,
+        HeroState::new(
+            "battle_cleric".to_string(),
+            1,
+            100.0,
+            10.0,
+            cleric_pos,
+            1.0,
+            2,
+        ),
+    );
+    game_state.dungeon.get_tile_mut(cleric_pos).unwrap().tile_type =
+        "corrupted_floor".to_string();
+    update_hero_abilities(&mut game_state, &game_data, 1.0);
+    assert!(game_state
+        .entities
+        .get(cleric_id)
+        .unwrap()
+        .as_hero()
+        .unwrap()
+        .status_effects
+        .iter()
+        .any(|effect| effect.effect_type == "purified"));
+
+    let rogue_pos = TilePos::new(12, 12);
+    let rogue_id = game_state.entities.spawn_hero(
+        rogue_pos,
+        HeroState::new("rogue".to_string(), 1, 100.0, 10.0, rogue_pos, 1.0, 3),
+    );
+    let creature_id = game_state.entities.spawn_creature(
+        TilePos::new(12, 13),
+        CreatureState::new("goblin".to_string(), 1, 100.0, 10.0, 4),
+    );
+    update_hero_abilities(&mut game_state, &game_data, 1.0);
+    assert!(game_state
+        .entities
+        .get(rogue_id)
+        .unwrap()
+        .as_hero()
+        .unwrap()
+        .ability_cooldowns
+        .contains_key("backstab"));
+    assert!(game_state
+        .entities
+        .get(creature_id)
+        .unwrap()
+        .as_creature()
+        .unwrap()
+        .health
+        < 100.0);
 }

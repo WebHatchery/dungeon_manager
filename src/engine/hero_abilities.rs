@@ -20,11 +20,8 @@
 //!   "on_large_group" (>=3)
 //! - the hero's own tile/room: "in_room" (optionally "in_room:<room_type>" to require a
 //!   specific room type)
-//!
-//! Some authored triggers ("on_ritual_detected", "on_corruption", "on_corruption_detected",
-//! "on_sneak_attack", "on_trapped") need subsystems this engine doesn't have yet (ritual
-//! detection, corruption, stealth, trap state) — they're valid data but never fire. See
-//! `TODO.md`.
+//! - live dungeon conditions: "on_ritual_detected", "on_corruption",
+//!   "on_corruption_detected", "on_sneak_attack", and "on_trapped"
 
 use crate::data::GameData;
 use crate::engine::spell_effects::apply_spell_effect;
@@ -200,6 +197,40 @@ fn evaluate_trigger(
             .find(|&id| is_undead_creature(id, game_state, game_data))
             .map(AbilityTarget::Entity),
 
+        // A ritual is detectable from nearby tiles, so the ability can fire
+        // before the hero is standing inside the circle itself.
+        "on_ritual_detected" => ritual_nearby(hero_entity, game_state)
+            .map(|_| AbilityTarget::SelfTarget),
+
+        // Corruption is a tile condition. Purification is self-targeted while
+        // mass cleansing is also gated by the same nearby scan.
+        "on_corruption" => corrupted_at(hero_entity.pos, game_state)
+            .then_some(AbilityTarget::SelfTarget),
+        "on_corruption_detected" => corrupted_nearby(hero_entity, game_state)
+            .then_some(AbilityTarget::SelfTarget),
+
+        // A rogue gets one opening strike against a nearby hostile while it has
+        // not been hit recently. The cooldown prevents repeated procs.
+        "on_sneak_attack" => {
+            let recently_hit = (0.0..RECENT_HIT_WINDOW)
+                .contains(&(game_state.time_elapsed - hero_entity.last_damage_time));
+            (!recently_hit)
+                .then(|| nearby_enemies(hero_entity, game_state, game_data).into_iter().next())
+                .flatten()
+                .map(AbilityTarget::Entity)
+        }
+
+        // Trap awareness is evaluated before trap triggering in the fixed
+        // timestep, allowing the wizard's authored speed escape to matter.
+        "on_trapped" => {
+            let trapped = game_state
+                .dungeon
+                .get_tile(hero_entity.pos)
+                .and_then(|tile| tile.trap.as_ref())
+                .is_some_and(|trap| trap.constructed && trap.active && trap.cooldown <= 0.0);
+            trapped.then_some(AbilityTarget::SelfTarget)
+        }
+
         // Room-scoped abilities act on the hero's current tile/room, not the hero itself.
         trigger if trigger == "in_room" || trigger.starts_with("in_room:") => {
             let room_type_filter = trigger.strip_prefix("in_room:");
@@ -211,10 +242,38 @@ fn evaluate_trigger(
             in_matching_room.then_some(AbilityTarget::Position(hero_entity.pos))
         }
 
-        // Needs a subsystem this engine doesn't have yet (ritual detection, corruption,
-        // stealth, trap state) — recognized as valid data, never fires. See module docs.
         _ => None,
     }
+}
+
+fn ritual_nearby(hero_entity: &Entity, game_state: &GameState) -> Option<TilePos> {
+    game_state
+        .room_manager
+        .rooms
+        .iter()
+        .filter(|room| room.active && room.room_type == "ritual_circle")
+        .filter(|room| manhattan_distance(hero_entity.pos, room.get_center()) <= ABILITY_SCAN_RADIUS)
+        .min_by_key(|room| manhattan_distance(hero_entity.pos, room.get_center()))
+        .map(|room| room.get_center())
+}
+
+fn corrupted_at(pos: TilePos, game_state: &GameState) -> bool {
+    game_state
+        .dungeon
+        .get_tile(pos)
+        .is_some_and(|tile| tile.tile_type == "corrupted_floor")
+}
+
+fn corrupted_nearby(hero_entity: &Entity, game_state: &GameState) -> bool {
+    game_state
+        .dungeon
+        .grid
+        .iter()
+        .flat_map(|row| row.iter())
+        .any(|tile| {
+            tile.tile_type == "corrupted_floor"
+                && manhattan_distance(hero_entity.pos, tile.pos) <= ABILITY_SCAN_RADIUS
+        })
 }
 
 /// Nearest enemy's position, if at least `min_count` hostiles are within scan range.

@@ -435,7 +435,7 @@ fn apply_status_effect(entity_id: EntityId, effect: &SpellEffect, game_state: &m
                 crate::state::entities::EntityType::Creature(creature) => {
                     // "freeze" slows movement immediately on application; combat's
                     // update_status_effects reverts it when the effect expires.
-                    if status == "freeze" && strength != 0.0 {
+                    if (status == "freeze" || status == "speed_modifier") && strength != 0.0 {
                         creature.movement_speed *= strength;
                     }
                     creature
@@ -454,7 +454,7 @@ fn apply_status_effect(entity_id: EntityId, effect: &SpellEffect, game_state: &m
                     );
                 }
                 crate::state::entities::EntityType::Hero(hero) => {
-                    if status == "freeze" && strength != 0.0 {
+                    if (status == "freeze" || status == "speed_modifier") && strength != 0.0 {
                         hero.movement_speed *= strength;
                     }
                     hero.status_effects
