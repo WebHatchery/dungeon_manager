@@ -13,6 +13,7 @@ pub mod technologies;
 pub mod tiles;
 pub mod traits;
 pub mod traps;
+pub mod tutorial;
 
 use std::collections::HashMap;
 use std::error::Error;
@@ -30,6 +31,7 @@ pub use technologies::TechData;
 pub use tiles::TileData;
 pub use traits::TraitData;
 pub use traps::TrapData;
+pub use tutorial::TutorialData;
 
 #[derive(Default)]
 pub struct GameData {
@@ -44,6 +46,7 @@ pub struct GameData {
     pub hero_buildings: HashMap<String, HeroBuildingData>,
     pub scenarios: HashMap<String, ScenarioDefinition>,
     pub campaigns: HashMap<String, CampaignDefinition>,
+    pub tutorial: TutorialData,
     pub config: GameConfig,
     pub content_pack_reports: Vec<content_pack::ContentPackReport>,
     pub asset_roots: Vec<PathBuf>,
@@ -64,6 +67,11 @@ impl GameData {
         let scenarios = scenario::load_scenarios()?;
         let campaigns = campaign::load_campaigns()?;
         let config = game_config::load_game_config()?;
+        let tutorial = tutorial::load_tutorial()?;
+        let tutorial_problems = tutorial.validate();
+        if !tutorial_problems.is_empty() {
+            return Err(tutorial_problems.join("; ").into());
+        }
 
         Ok(Self {
             tiles,
@@ -77,6 +85,7 @@ impl GameData {
             hero_buildings,
             scenarios,
             campaigns,
+            tutorial,
             config,
             content_pack_reports: Vec::new(),
             asset_roots: Vec::new(),

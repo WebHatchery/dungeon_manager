@@ -1,0 +1,88 @@
+{
+  "steps": [
+    {
+      "id": "dig",
+      "title": "Dig out a room",
+      "hint": "Select Dig in the Build tab and drag across earth tiles. Your imps will excavate them.",
+      "completion": { "type": "dig", "target": 6 }
+    },
+    {
+      "id": "claim",
+      "title": "Expand your territory",
+      "hint": "Imps claim dug floor connected to your dungeon. Keep digging until your domain grows.",
+      "completion": { "type": "claim", "target": 15 }
+    },
+    {
+      "id": "lair",
+      "title": "Build a Lair",
+      "hint": "Select Lair in the Build tab and drag over claimed floor. Creatures need somewhere to sleep.",
+      "completion": { "type": "room", "room": "lair" }
+    },
+    {
+      "id": "hatchery",
+      "title": "Build a Hatchery",
+      "hint": "Select Hatchery and place it on claimed floor. It feeds your creatures.",
+      "completion": { "type": "room", "room": "hatchery" }
+    },
+    {
+      "id": "treasury",
+      "title": "Build a Treasury",
+      "hint": "Select Treasury to store more gold. Dig into gold veins to fill it.",
+      "completion": { "type": "room", "room": "treasury" }
+    },
+    {
+      "id": "recruit",
+      "title": "Recruit a creature",
+      "hint": "With a lair and hatchery ready, creatures will join your dungeon. Prepare defenses before the heroes arrive.",
+      "completion": { "type": "recruit" }
+    },
+    {
+      "id": "combat",
+      "title": "Survive a skirmish",
+      "hint": "Let your creatures meet a hostile and win your first fight.",
+      "completion": { "type": "combat" }
+    },
+    {
+      "id": "traps",
+      "title": "Arm a trap",
+      "hint": "Use the Traps tab to build a trap and let an invading hero trigger it.",
+      "completion": { "type": "trap" }
+    },
+    {
+      "id": "wages",
+      "title": "Keep the dungeon paid",
+      "hint": "Payday arrives on the simulation clock. Keep gold in reserve so moods and loyalty hold.",
+      "completion": { "type": "payday" }
+    },
+    {
+      "id": "research",
+      "title": "Research an upgrade",
+      "hint": "Open the Research tab, choose a technology, and let your scholars finish it.",
+      "completion": { "type": "research" }
+    },
+    {
+      "id": "wave",
+      "title": "Face the first hero wave",
+      "hint": "Hold the heart through the first organized assault. Traps, rooms, and creature moods all matter.",
+      "completion": { "type": "wave" }
+    },
+    {
+      "id": "spell",
+      "title": "Cast a spell",
+      "hint": "Choose a spell in the Magic tab and tap a valid tile or target.",
+      "completion": { "type": "spell" }
+    },
+    {
+      "id": "conversion",
+      "title": "Turn a hero",
+      "hint": "Capture a fallen hero and complete a prison or torture-chamber conversion.",
+      "completion": { "type": "conversion" }
+    },
+    {
+      "id": "temple",
+      "title": "Use the temple",
+      "hint": "Build a Temple and learn how its dark rite changes the dungeon's mana economy.",
+      "completion": { "type": "temple" }
+    }
+  ]
+}

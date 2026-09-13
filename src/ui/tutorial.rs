@@ -13,17 +13,17 @@ use macroquad_toolkit::ui::{
 const PANEL_WIDTH: f32 = 320.0;
 
 /// Draw the current tutorial objective in a small panel below the HUD.
-pub fn draw_tutorial_panel(state: &GameState) {
-    let Some(step) = tutorial_system::current_step(state) else {
+pub fn draw_tutorial_panel(state: &GameState, game_data: &GameData) {
+    let Some(step) = tutorial_system::current_step(state, game_data) else {
         return;
     };
 
-    let title = match tutorial_system::step_progress(state) {
+    let title = match tutorial_system::step_progress(state, game_data) {
         Some((current, target)) => format!("Objective: {} ({}/{})", step.title, current, target),
         None => format!("Objective: {}", step.title),
     };
 
-    let hint_lines = wrap_text(step.hint, PANEL_WIDTH - 24.0, 16.0);
+    let hint_lines = wrap_text(&step.hint, PANEL_WIDTH - 24.0, 16.0);
     let panel_height = 42.0 + hint_lines.len() as f32 * 20.0 + 10.0;
     let rect = Rect::new(10.0, HUD_HEIGHT + 10.0, PANEL_WIDTH, panel_height);
 

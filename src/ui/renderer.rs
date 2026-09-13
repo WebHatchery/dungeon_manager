@@ -363,7 +363,9 @@ impl GameRenderer {
         crate::ui::minimap::draw_minimap(state, game_data);
 
         // Tutorial objective panel
-        crate::ui::tutorial::draw_tutorial_panel(state);
+        if let Some(data) = game_data {
+            crate::ui::tutorial::draw_tutorial_panel(state, data);
+        }
 
         // Scenario intro overlay (blocks the view until dismissed)
         if let Some(ref data) = game_data {

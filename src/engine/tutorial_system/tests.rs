@@ -18,11 +18,15 @@ fn tutorial_starts_with_intro_and_advances_on_dig_marks() {
     update_tutorial(&mut state, &game_data);
     assert_eq!(state.tutorial.step_index, 0);
 
-    // Mark six earth tiles for digging
+    // Mark the authored number of earth tiles for digging
+    let target = match game_data.tutorial.steps[0].completion {
+        crate::data::tutorial::TutorialCompletion::Dig { target } => target,
+        _ => panic!("first tutorial step should be a dig objective"),
+    };
     let mut marked = 0;
     for row in &mut state.dungeon.grid {
         for tile in row.iter_mut() {
-            if marked >= DIG_TARGET {
+            if marked >= target {
                 break;
             }
             if tile.tile_type == "earth" {
@@ -31,7 +35,7 @@ fn tutorial_starts_with_intro_and_advances_on_dig_marks() {
             }
         }
     }
-    assert_eq!(marked, DIG_TARGET);
+    assert_eq!(marked, target);
 
     update_tutorial(&mut state, &game_data);
     assert_eq!(state.tutorial.step_index, 1);

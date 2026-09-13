@@ -4,56 +4,31 @@
 //! No events need to be wired: the tutorial simply observes what the player
 //! has already accomplished.
 
+use crate::data::tutorial::{TutorialCompletion, TutorialStepData};
 use crate::data::GameData;
 use crate::state::game_state::GameState;
 use crate::state::tile_state::Ownership;
 use crate::state::OwnerId;
 
-pub struct TutorialStep {
-    pub title: &'static str,
-    pub hint: &'static str,
-}
-
-pub const STEPS: &[TutorialStep] = &[
-    TutorialStep {
-        title: "Dig out a room",
-        hint: "Select Dig (key 1 or the Build tab) and drag across earth tiles. Your imps will excavate them.",
-    },
-    TutorialStep {
-        title: "Expand your territory",
-        hint: "Imps claim dug floor connected to your dungeon. Keep digging until your domain grows.",
-    },
-    TutorialStep {
-        title: "Build a Lair",
-        hint: "Select Lair (key 2) and drag over claimed floor. Creatures need somewhere to sleep.",
-    },
-    TutorialStep {
-        title: "Build a Hatchery",
-        hint: "Select Hatchery (key 3) and place it on claimed floor. It feeds your creatures.",
-    },
-    TutorialStep {
-        title: "Build a Treasury",
-        hint: "Select Treasury (key 4) to store more gold. Dig into gold veins to fill it.",
-    },
-    TutorialStep {
-        title: "Recruit a creature",
-        hint: "With a lair and hatchery ready, creatures will join your dungeon. Prepare defenses before the heroes arrive!",
-    },
-];
-
 /// The step the player is currently on, if the tutorial is running.
-pub fn current_step(state: &GameState) -> Option<&'static TutorialStep> {
+pub fn current_step<'a>(
+    state: &GameState,
+    game_data: &'a GameData,
+) -> Option<&'a TutorialStepData> {
     if !state.tutorial.enabled || state.tutorial.complete {
         return None;
     }
-    STEPS.get(state.tutorial.step_index)
+    game_data.tutorial.steps.get(state.tutorial.step_index)
 }
 
 /// Progress counter (current, target) for count-based steps.
-pub fn step_progress(state: &GameState) -> Option<(usize, usize)> {
-    match state.tutorial.step_index {
-        0 => Some((dig_progress(state).min(DIG_TARGET), DIG_TARGET)),
-        1 => Some((claimed_tiles(state).min(CLAIM_TARGET), CLAIM_TARGET)),
+pub fn step_progress(state: &GameState, game_data: &GameData) -> Option<(usize, usize)> {
+    let step = game_data.tutorial.steps.get(state.tutorial.step_index)?;
+    match step.completion {
+        TutorialCompletion::Dig { target } => Some((dig_progress(state).min(target), target)),
+        TutorialCompletion::Claim { target } => {
+            Some((claimed_tiles(state).min(target), target))
+        }
         _ => None,
     }
 }
@@ -73,33 +48,27 @@ pub fn pending_intro<'a>(state: &GameState, game_data: &'a GameData) -> Option<&
 }
 
 /// Advance the tutorial when the current step's condition is met.
-pub fn update_tutorial(state: &mut GameState, _game_data: &GameData) {
+pub fn update_tutorial(state: &mut GameState, game_data: &GameData) {
     if !state.tutorial.enabled || state.tutorial.complete {
         return;
     }
 
-    let done = match state.tutorial.step_index {
-        0 => dig_progress(state) >= DIG_TARGET,
-        1 => claimed_tiles(state) >= CLAIM_TARGET,
-        2 => has_room(state, "lair"),
-        3 => has_room(state, "hatchery"),
-        4 => has_room(state, "treasury"),
-        5 => has_recruited_creature(state),
-        _ => true,
+    let Some(step) = game_data.tutorial.steps.get(state.tutorial.step_index) else {
+        state.tutorial.complete = true;
+        return;
     };
+    let done = completion_met(&step.completion, state, game_data);
 
     if !done {
         return;
     }
 
-    if let Some(step) = STEPS.get(state.tutorial.step_index) {
-        state
-            .notifications
-            .success(format!("Objective complete: {}", step.title));
-    }
+    state
+        .notifications
+        .success(format!("Objective complete: {}", step.title));
 
     state.tutorial.step_index += 1;
-    if state.tutorial.step_index >= STEPS.len() {
+    if state.tutorial.step_index >= game_data.tutorial.steps.len() {
         state.tutorial.complete = true;
         state
             .notifications
@@ -107,8 +76,33 @@ pub fn update_tutorial(state: &mut GameState, _game_data: &GameData) {
     }
 }
 
-const DIG_TARGET: usize = 6;
-const CLAIM_TARGET: usize = 15;
+fn completion_met(
+    completion: &TutorialCompletion,
+    state: &GameState,
+    game_data: &GameData,
+) -> bool {
+    match completion {
+        TutorialCompletion::Dig { target } => dig_progress(state) >= *target,
+        TutorialCompletion::Claim { target } => claimed_tiles(state) >= *target,
+        TutorialCompletion::Room { room } => has_room(state, room),
+        TutorialCompletion::Recruit => has_recruited_creature(state),
+        TutorialCompletion::Combat => state.player.kills.values().sum::<u32>() > 0,
+        TutorialCompletion::Trap => state
+            .dungeon
+            .grid
+            .iter()
+            .flat_map(|row| row.iter())
+            .any(|tile| tile.trap.as_ref().is_some_and(|trap| trap.triggered)),
+        TutorialCompletion::Payday => {
+            state.time_elapsed >= game_data.config.timing.pay_day_interval
+        }
+        TutorialCompletion::Research => !state.player.completed_technologies.is_empty(),
+        TutorialCompletion::Wave => state.hero_base.current_wave_number > 0,
+        TutorialCompletion::Spell => !state.player.spells_cast.is_empty(),
+        TutorialCompletion::Conversion => state.conversion_count > 0,
+        TutorialCompletion::Temple => has_room(state, "temple"),
+    }
+}
 
 /// Tiles marked for digging plus tiles already excavated count toward the
 /// dig objective, so fast imps can't undercut the counter.
