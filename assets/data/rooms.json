@@ -15,8 +15,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.3
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -93,8 +92,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.4
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -171,8 +169,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.5
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -245,8 +242,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.5
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -321,8 +317,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.6
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -398,8 +393,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.5
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -485,8 +479,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.4
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -557,8 +550,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.3
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -630,8 +622,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 1.0
+      ]
     },
     "requirements": {
       "global_rooms_required": [
@@ -713,8 +704,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.8
+      ]
     },
     "requirements": {
       "global_rooms_required": [
@@ -791,8 +781,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.5
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -851,8 +840,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.3
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -913,8 +901,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.4
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -977,8 +964,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.6
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -1066,8 +1052,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.8
+      ]
     },
     "requirements": {
       "global_rooms_required": [
@@ -1149,8 +1134,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.8
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -1217,8 +1201,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.9
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -1285,8 +1268,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.5
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -1358,8 +1340,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.7
+      ]
     },
     "requirements": {
       "global_rooms_required": [
@@ -1437,8 +1418,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.7
+      ]
     },
     "requirements": {
       "global_rooms_required": [
@@ -1517,8 +1497,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.8
+      ]
     },
     "requirements": {
       "global_rooms_required": [],
@@ -1587,8 +1566,7 @@
       "can_overlap": false,
       "allowed_terrain": [
         "claimed_floor"
-      ],
-      "construction_time": 0.9
+      ]
     },
     "requirements": {
       "global_rooms_required": [],

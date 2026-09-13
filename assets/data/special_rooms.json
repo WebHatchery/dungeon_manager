@@ -15,8 +15,7 @@
             "can_overlap": false,
             "allowed_terrain": [
                 "claimed_floor"
-            ],
-            "construction_time": 0
+            ]
         },
         "requirements": {
             "global_rooms_required": [],

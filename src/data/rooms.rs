@@ -27,7 +27,6 @@ pub struct BuildData {
     pub requires_claimed: bool,
     pub can_overlap: bool,
     pub allowed_terrain: Vec<String>,
-    pub construction_time: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -34,9 +34,6 @@ use std::path::{Path, PathBuf};
 /// TODO.md. **Shrink this list; do not grow it.** Adding a name here is a
 /// decision to ship data that does nothing, and should be made deliberately.
 const UNCONSUMED: &[&str] = &[
-    // Rooms still appear the instant they are paid for, rather than taking
-    // `construction_time` to raise.
-    "BuildData::construction_time",
     // Room AI hints beyond `task_type`/`max_creatures`.
     "AIData::forbidden_creatures",
     "AIData::entry_conditions",
