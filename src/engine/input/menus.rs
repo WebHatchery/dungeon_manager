@@ -70,6 +70,7 @@ pub(super) fn handle_main_menu(
     selected_map_type: &mut MapType,
     phase: &mut GamePhase,
     game_data: &mut Option<GameData>,
+    save_available: bool,
 ) {
     let layout = crate::ui::menu_layout::main_menu();
     let mouse = mouse_position();
@@ -104,7 +105,7 @@ pub(super) fn handle_main_menu(
 
     // Load Game opens the slot browser rather than loading anything itself. The
     // browser reads every slot once, here, on the click — never in a draw.
-    if clicked(layout.load) {
+    if clicked(layout.load) && save_available {
         *phase = GamePhase::LoadGame(SlotBrowser::open(SlotBrowserPurpose::Load));
         return;
     }

@@ -462,6 +462,7 @@ impl Sidebar {
         entities: &crate::state::entities::EntityManager,
         rooms: &[crate::engine::room_validator::Room],
         graphics: Option<&crate::ui::resources::GraphicsCache>,
+        save_available: bool,
     ) {
         crate::ui::sidebar_renderer::draw_sidebar(
             self,
@@ -474,6 +475,7 @@ impl Sidebar {
             entities,
             rooms,
             graphics,
+            save_available,
         );
     }
 

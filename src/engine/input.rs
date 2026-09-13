@@ -30,13 +30,14 @@ impl InputHandler {
         action_queue: &mut ActionQueue,
         drag_selection: &mut DragSelection,
         settings: &mut crate::state::settings::GameSettings,
+        save_available: bool,
     ) {
         match phase {
             GamePhase::Loading => {
                 // Loading is handled asynchronously in main loop
             }
             GamePhase::MainMenu => {
-                menus::handle_main_menu(selected_map_type, phase, game_data);
+                menus::handle_main_menu(selected_map_type, phase, game_data, save_available);
             }
             GamePhase::Settings => {
                 menus::handle_settings(phase, settings);
@@ -89,6 +90,7 @@ impl InputHandler {
                         sidebar,
                         action_queue,
                         drag_selection,
+                        save_available,
                     ) {
                         *phase = GamePhase::MainMenu;
                     }

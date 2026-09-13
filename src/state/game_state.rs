@@ -106,6 +106,12 @@ pub struct GameState {
     /// player picks, and `GamePhase::Playing` is where it lives.
     #[serde(skip)]
     pub slot_browser: Option<crate::state::interaction::SlotBrowser>,
+
+    /// Set by save/load actions and consumed by the session owner after the
+    /// action completes. This keeps disk-backed save discovery out of the
+    /// render loop.
+    #[serde(skip)]
+    pub save_availability_dirty: bool,
 }
 
 impl GameState {
@@ -263,6 +269,7 @@ impl GameState {
             rival_keepers: map_rival_keepers,
             tutorial: crate::state::tutorial::TutorialState::default(),
             difficulty: crate::state::settings::Difficulty::default(),
+            save_availability_dirty: false,
         };
 
         // Recalculate max gold and other room-based stats

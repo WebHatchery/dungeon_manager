@@ -13,6 +13,7 @@ mod tiles;
 pub struct GameRenderer {
     pub graphics_cache: Option<GraphicsCache>,
     pub sidebar: Sidebar,
+    pub save_available: bool,
 }
 
 impl GameRenderer {
@@ -20,6 +21,7 @@ impl GameRenderer {
         Self {
             graphics_cache: None,
             sidebar: Sidebar::new(),
+            save_available: false,
         }
     }
 
@@ -62,7 +64,11 @@ impl GameRenderer {
                 );
             }
             GamePhase::MainMenu => {
-                crate::ui::menus::draw_main_menu(self.graphics_cache.as_ref(), selected_map_type);
+                crate::ui::menus::draw_main_menu(
+                    self.graphics_cache.as_ref(),
+                    selected_map_type,
+                    self.save_available,
+                );
             }
             GamePhase::Settings => {
                 crate::ui::menus::draw_settings_menu(settings);
@@ -342,6 +348,7 @@ impl GameRenderer {
                 &state.entities,
                 &state.room_manager.rooms,
                 self.graphics_cache.as_ref(),
+                self.save_available,
             );
         }
 
@@ -371,7 +378,7 @@ impl GameRenderer {
             // not clickable, so drawing them would be a lie.
             match state.slot_browser.as_ref() {
                 Some(browser) => crate::ui::slot_browser::draw(browser),
-                None => crate::ui::menus::draw_pause_menu(),
+                None => crate::ui::menus::draw_pause_menu(self.save_available),
             }
         }
 

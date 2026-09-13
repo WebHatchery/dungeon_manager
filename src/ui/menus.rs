@@ -40,7 +40,11 @@ fn draw_title_block(title: &str, subtitle: &str, baseline_y: f32) {
 }
 
 /// Draw the main menu screen
-pub fn draw_main_menu(graphics_cache: Option<&GraphicsCache>, _selected_map_type: &MapType) {
+pub fn draw_main_menu(
+    graphics_cache: Option<&GraphicsCache>,
+    _selected_map_type: &MapType,
+    save_available: bool,
+) {
     // Draw background if available
     if let Some(cache) = graphics_cache {
         if let Some(bg_tex) = cache.ui_textures.get("main_menu_bg") {
@@ -73,11 +77,9 @@ pub fn draw_main_menu(graphics_cache: Option<&GraphicsCache>, _selected_map_type
     );
 
     let layout = menu_layout::main_menu();
-    let save_exists = crate::state::save_system::any_save_exists();
-
     draw_menu_button(layout.start, "START GAME", true, ButtonTone::Primary);
     draw_menu_button(layout.skirmish, "SKIRMISH", true, ButtonTone::Positive);
-    draw_menu_button(layout.load, "LOAD GAME", save_exists, ButtonTone::Positive);
+    draw_menu_button(layout.load, "LOAD GAME", save_available, ButtonTone::Positive);
     draw_menu_button(layout.settings, "SETTINGS", true, ButtonTone::Secondary);
     if let Some(exit) = layout.exit {
         draw_menu_button(exit, "EXIT GAME", true, ButtonTone::Danger);
@@ -257,7 +259,7 @@ pub fn draw_settings_menu(settings: &GameSettings) {
 }
 
 /// Draw the pause menu overlay
-pub fn draw_pause_menu() {
+pub fn draw_pause_menu(save_available: bool) {
     // Semi-transparent overlay
     draw_rectangle(
         0.0,
@@ -271,10 +273,9 @@ pub fn draw_pause_menu() {
 
     draw_title_block("PAUSED", "", layout.resume.y - 60.0);
 
-    let save_exists = crate::state::save_system::any_save_exists();
     draw_menu_button(layout.resume, "RESUME", true, ButtonTone::Positive);
     draw_menu_button(layout.save, "SAVE GAME", true, ButtonTone::Primary);
-    draw_menu_button(layout.load, "LOAD GAME", save_exists, ButtonTone::Secondary);
+    draw_menu_button(layout.load, "LOAD GAME", save_available, ButtonTone::Secondary);
     draw_menu_button(layout.main_menu, "MAIN MENU", true, ButtonTone::Warning);
     if let Some(exit) = layout.exit {
         draw_menu_button(exit, "EXIT", true, ButtonTone::Danger);

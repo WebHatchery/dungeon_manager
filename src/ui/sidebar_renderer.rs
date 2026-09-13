@@ -24,6 +24,7 @@ pub fn draw_sidebar(
     entities: &crate::state::entities::EntityManager,
     rooms: &[crate::engine::room_validator::Room],
     graphics: Option<&crate::ui::resources::GraphicsCache>,
+    save_available: bool,
 ) {
     if !sidebar.is_expanded {
         // Draw just tabs
@@ -67,7 +68,7 @@ pub fn draw_sidebar(
         ),
         SidebarTab::Traps => draw_traps_content(sidebar, current_mode, player, game_data),
         SidebarTab::Research => draw_research_content(sidebar, player, &game_data.technologies),
-        SidebarTab::Utils => draw_utils_content(sidebar, current_mode),
+        SidebarTab::Utils => draw_utils_content(sidebar, current_mode, save_available),
         SidebarTab::Cheats => cheats::draw_cheats_content(sidebar),
     }
 
@@ -158,7 +159,7 @@ fn draw_tabs(sidebar: &Sidebar) {
     );
 }
 
-fn draw_utils_content(sidebar: &Sidebar, current_mode: &InteractionMode) {
+fn draw_utils_content(sidebar: &Sidebar, current_mode: &InteractionMode, save_available: bool) {
     let start_x = PADDING;
     let start_y = sidebar.panel_y + PADDING;
 
@@ -186,9 +187,7 @@ fn draw_utils_content(sidebar: &Sidebar, current_mode: &InteractionMode) {
     let load_x = save_x + btn_width + spacing;
     let load_y = start_y;
 
-    let save_exists = crate::state::save_system::any_save_exists();
-
-    let load_color = if save_exists {
+    let load_color = if save_available {
         Color::new(0.3, 0.4, 0.6, 1.0)
     } else {
         Color::new(0.2, 0.2, 0.2, 0.5)
@@ -201,14 +200,14 @@ fn draw_utils_content(sidebar: &Sidebar, current_mode: &InteractionMode) {
         btn_width,
         btn_height,
         2.0,
-        if save_exists { WHITE } else { GRAY },
+        if save_available { WHITE } else { GRAY },
     );
     draw_ui_text(
         "Load Game",
         load_x + 30.0,
         load_y + 30.0,
         16.0,
-        if save_exists { WHITE } else { GRAY },
+        if save_available { WHITE } else { GRAY },
     );
 }
 

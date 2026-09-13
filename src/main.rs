@@ -112,6 +112,8 @@ impl Game {
                         data.config.timing.autosave_interval,
                     );
                     self.game_data = Some(data);
+                    self.renderer.save_available =
+                        crate::state::save_system::any_save_exists();
                 }
                 Err(e) => {
                     eprintln!("Failed to load game data: {}", e);
@@ -131,6 +133,7 @@ impl Game {
     }
 
     fn update(&mut self, dt: f32) {
+        let was_main_menu = matches!(self.phase, GamePhase::MainMenu);
         InputHandler::update(
             dt,
             &mut self.phase,
@@ -145,6 +148,7 @@ impl Game {
             &mut self.action_queue,
             &mut self.drag_selection,
             &mut self.settings,
+            self.renderer.save_available,
         );
 
         // Process queued actions
@@ -168,6 +172,16 @@ impl Game {
             }
 
             Self::tick_autosave(&mut self.autosave, state, dt);
+        }
+
+        if let GamePhase::Playing(ref mut state) = self.phase {
+            if state.save_availability_dirty {
+                self.renderer.save_available = crate::state::save_system::any_save_exists();
+                state.save_availability_dirty = false;
+            }
+        }
+        if !was_main_menu && matches!(self.phase, GamePhase::MainMenu) {
+            self.renderer.save_available = crate::state::save_system::any_save_exists();
         }
     }
 

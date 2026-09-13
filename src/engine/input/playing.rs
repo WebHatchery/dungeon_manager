@@ -39,9 +39,12 @@ fn handle_slot_browser(state: &mut GameState) {
             // where their game lives, so a later quick save follows them there.
             state.active_slot = slot;
             match crate::state::save_system::save_game(state, slot) {
-                Ok(()) => state
-                    .notifications
-                    .success(format!("Game saved to {slot}!")),
+                Ok(()) => {
+                    state.save_availability_dirty = true;
+                    state
+                        .notifications
+                        .success(format!("Game saved to {slot}!"));
+                }
                 Err(e) => {
                     state.notifications.danger(format!("Save failed: {e}"));
                     eprintln!("Failed to save game: {e}");
@@ -51,6 +54,7 @@ fn handle_slot_browser(state: &mut GameState) {
         SlotBrowserPurpose::Load => match crate::state::save_system::load_game(slot) {
             Ok(loaded_state) => {
                 *state = loaded_state;
+                state.save_availability_dirty = true;
                 state
                     .notifications
                     .success(format!("Game loaded from {slot}!"));
@@ -78,6 +82,7 @@ pub(super) fn handle_playing(
     sidebar: &mut Sidebar,
     action_queue: &mut ActionQueue,
     drag_selection: &mut DragSelection,
+    save_available: bool,
 ) -> bool {
     // Handle Game Over Input
     if state.game_over {
@@ -150,7 +155,7 @@ pub(super) fn handle_playing(
             state.slot_browser = Some(SlotBrowser::open(SlotBrowserPurpose::Save));
         }
 
-        if clicked(layout.load) && crate::state::save_system::any_save_exists() {
+        if clicked(layout.load) && save_available {
             state.slot_browser = Some(SlotBrowser::open(SlotBrowserPurpose::Load));
         }
 
