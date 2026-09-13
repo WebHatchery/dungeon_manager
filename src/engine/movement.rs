@@ -1,6 +1,6 @@
-use crate::state::entities::{EntityId, EntityManager};
-use crate::state::dungeon::Dungeon;
 use crate::data::GameData;
+use crate::state::dungeon::Dungeon;
+use crate::state::entities::{EntityId, EntityManager};
 use crate::state::tile_state::TilePos;
 
 /// Shared movement logic for entities following a path/timer system.

@@ -81,10 +81,9 @@ pub fn progress_prison_conversions(
         };
 
         match room.room_type.as_str() {
-            "prison" => conversions_to_process.push((
-                hero_id,
-                ConversionKind::Prison { room_id: room.id },
-            )),
+            "prison" => {
+                conversions_to_process.push((hero_id, ConversionKind::Prison { room_id: room.id }))
+            }
             "torture_chamber" if active_torture_rooms.contains_key(&room.id) => {
                 conversions_to_process.push((
                     hero_id,
@@ -107,12 +106,9 @@ pub fn progress_prison_conversions(
             if let Some(hero) = entity.as_hero_mut() {
                 hero_name = hero.hero_id.clone();
                 let rate = match kind {
-                    ConversionKind::Prison { room_id } => prison_conversion_rate(
-                        room_manager,
-                        game_data,
-                        room_id,
-                        skeleton_rate,
-                    ),
+                    ConversionKind::Prison { room_id } => {
+                        prison_conversion_rate(room_manager, game_data, room_id, skeleton_rate)
+                    }
                     ConversionKind::Torture { room_id, torturers } => {
                         torture_base_rate
                             * torture_power(room_manager, game_data, room_id)

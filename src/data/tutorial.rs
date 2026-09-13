@@ -45,7 +45,10 @@ impl TutorialData {
         let mut ids = std::collections::HashSet::new();
         for step in &self.steps {
             if step.id.trim().is_empty() || !ids.insert(step.id.clone()) {
-                problems.push(format!("tutorial step id is empty or duplicated: `{}`", step.id));
+                problems.push(format!(
+                    "tutorial step id is empty or duplicated: `{}`",
+                    step.id
+                ));
             }
             if step.title.trim().is_empty() {
                 problems.push(format!("tutorial step `{}` has no title", step.id));

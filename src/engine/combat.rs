@@ -154,11 +154,9 @@ fn is_stunned(entity: &Entity) -> bool {
         crate::state::entities::EntityType::Structure(_)
         | crate::state::entities::EntityType::ResourcePile(_) => return false,
     };
-    status_effects
-        .iter()
-        .any(|e| {
-            e.effect_type == "stun" || e.effect_type == "charm" || e.effect_type == "polymorph"
-        })
+    status_effects.iter().any(|e| {
+        e.effect_type == "stun" || e.effect_type == "charm" || e.effect_type == "polymorph"
+    })
 }
 
 fn get_type_name(entity_type: &crate::state::entities::EntityType) -> String {
@@ -249,8 +247,8 @@ pub fn extract_combat_stats(entity: &Entity, game_data: &GameData) -> CombatStat
                 attack_speed: hero_data.combat.attack_speed,
                 resistances: hero_data.combat.resistances.clone(),
                 level: hero_state.level,
-                // Hero abilities (HeroAbilityData) have a richer trigger/effect shape than
-                // simple on-hit procs and aren't wired into combat yet; see TODO.md.
+                // HeroAbilityData triggers are evaluated by hero_abilities each simulation tick;
+                // they are intentionally not treated as simple combat-proc strings here.
                 abilities: Vec::new(),
             }
         }

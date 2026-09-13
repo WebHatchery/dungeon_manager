@@ -9,6 +9,9 @@ use crate::state::tile_state::{Ownership, TilePos};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
 
+mod task_rooms;
+pub use task_rooms::find_nearest_room_for_task_and_creature;
+
 /// A detected room instance in the game world
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Room {
@@ -559,18 +562,11 @@ pub fn find_nearest_room_for_creature(
     let mut best: Option<(usize, f32)> = None;
     for room in rooms.iter() {
         let room_type_matches = room.room_type == room_type
-            || room_data_for(room, game_data)
-                .is_some_and(|data| data.id == room_type);
+            || room_data_for(room, game_data).is_some_and(|data| data.id == room_type);
         if !room.active
             || room.quality < min_quality
             || !room_type_matches
-            || !creature_can_enter_room(
-                room,
-                creature_id,
-                creature_level,
-                creature_mood,
-                game_data,
-            )
+            || !creature_can_enter_room(room, creature_id, creature_level, creature_mood, game_data)
         {
             continue;
         }
@@ -726,89 +722,6 @@ pub fn room_defense_at(
         .and_then(|room| room_data_for(room, game_data))
         .map(|data| data.effects.creature_defense_modifier)
         .unwrap_or(0.0)
-}
-
-/// Nearest active room whose data declares `ai.task_type == task_type`.
-///
-/// The sibling of [`find_nearest_room`], keyed on what a room *does* rather
-/// than which room it is. Research used to mean `room_type == "library"` in
-/// two separate places, so a second research room could be built, staffed and
-/// still produce nothing. Matching the task family instead makes "another room
-/// that researches" an authoring decision rather than a code change.
-pub fn find_nearest_room_for_task(
-    rooms: &[Room],
-    task_type: &str,
-    pos: TilePos,
-    game_data: &crate::data::GameData,
-) -> Option<(usize, f32)> {
-    let mut best: Option<(usize, f32)> = None;
-
-    for room in rooms.iter() {
-        if !room.active {
-            continue;
-        }
-        let matches = room_data_for(room, game_data)
-            .map(|data| data.ai.task_type == task_type)
-            .unwrap_or(false);
-        if !matches {
-            continue;
-        }
-
-        let center = room.get_center();
-        let dx = (center.x - pos.x) as f32;
-        let dy = (center.y - pos.y) as f32;
-        let distance = (dx * dx + dy * dy).sqrt();
-
-        match best {
-            None => best = Some((room.id, distance)),
-            Some((_, best_dist)) if distance < best_dist => {
-                best = Some((room.id, distance));
-            }
-            _ => {}
-        }
-    }
-
-    best
-}
-
-/// Task-family room lookup with the same creature entry restrictions as the
-/// room-type lookup above.
-pub fn find_nearest_room_for_task_and_creature(
-    rooms: &[Room],
-    task_type: &str,
-    pos: TilePos,
-    creature_id: &str,
-    creature_level: u32,
-    creature_mood: f32,
-    game_data: &GameData,
-) -> Option<(usize, f32)> {
-    let mut best: Option<(usize, f32)> = None;
-    for room in rooms.iter() {
-        let matches = room.active
-            && room_data_for(room, game_data)
-                .is_some_and(|data| data.ai.task_type == task_type)
-            && creature_can_enter_room(
-                room,
-                creature_id,
-                creature_level,
-                creature_mood,
-                game_data,
-            );
-        if !matches {
-            continue;
-        }
-
-        let center = room.get_center();
-        let dx = (center.x - pos.x) as f32;
-        let dy = (center.y - pos.y) as f32;
-        let distance = (dx * dx + dy * dy).sqrt();
-        match best {
-            None => best = Some((room.id, distance)),
-            Some((_, best_dist)) if distance < best_dist => best = Some((room.id, distance)),
-            _ => {}
-        }
-    }
-    best
 }
 
 #[cfg(test)]

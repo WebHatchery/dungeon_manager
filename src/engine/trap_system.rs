@@ -274,9 +274,11 @@ fn trigger_trap(
     // families.
     let effects = &trap_data.effects;
 
-    if effects.blocks_movement && dungeon.get_tile(pos).is_some_and(|tile| {
-        tile.trap.as_ref().is_some_and(|trap| trap.locked)
-    }) {
+    if effects.blocks_movement
+        && dungeon
+            .get_tile(pos)
+            .is_some_and(|tile| tile.trap.as_ref().is_some_and(|trap| trap.locked))
+    {
         // Doors bar the way; they have nothing to fire.
         return None;
     }
@@ -378,11 +380,7 @@ fn trigger_area_trap(
         damage,
         affected_entities.len()
     );
-    set_trap_disabled(
-        dungeon,
-        pos,
-        trap_data.effects.cooldown.unwrap_or(5.0),
-    );
+    set_trap_disabled(dungeon, pos, trap_data.effects.cooldown.unwrap_or(5.0));
 
     Some(TrapTriggerResult {
         trap_type: "boulder_trap".to_string(),
@@ -406,7 +404,7 @@ fn trigger_alarm_trap(
             (entity.owner == OwnerId::Player
                 && creature.creature_id != "imp"
                 && pos.distance_to(&entity.pos) <= alert_radius)
-            .then_some(id)
+                .then_some(id)
         })
         .collect();
 
@@ -449,11 +447,7 @@ fn set_trap_disabled(dungeon: &mut Dungeon, pos: TilePos, cooldown: f32) {
 }
 
 /// Imps can restore a spent area trap once its cooldown has elapsed.
-fn rearm_triggered_traps(
-    dungeon: &mut Dungeon,
-    entities: &EntityManager,
-    game_data: &GameData,
-) {
+fn rearm_triggered_traps(dungeon: &mut Dungeon, entities: &EntityManager, game_data: &GameData) {
     let imp_positions: Vec<TilePos> = entities
         .creatures()
         .filter_map(|(id, creature)| {

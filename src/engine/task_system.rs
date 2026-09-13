@@ -498,7 +498,11 @@ fn execute_research(
         .find(|room| room.id == room_id)
         .and_then(|room| crate::engine::room_validator::room_data_for(room, game_data))
         .map(|data| {
-            let room = room_manager.rooms.iter().find(|room| room.id == room_id).unwrap();
+            let room = room_manager
+                .rooms
+                .iter()
+                .find(|room| room.id == room_id)
+                .unwrap();
             crate::engine::room_validator::room_productivity_multiplier(room, data)
         })
         .unwrap_or(1.0);

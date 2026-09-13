@@ -125,8 +125,7 @@ pub(super) fn handle_playing(
         if !state.victory || !state.has_pending_campaign_mission(game_data) {
             let rect = crate::ui::menu_layout::game_over_return_menu();
             let mouse = mouse_position();
-            if is_mouse_button_released(MouseButton::Left)
-                && rect.contains(vec2(mouse.0, mouse.1))
+            if is_mouse_button_released(MouseButton::Left) && rect.contains(vec2(mouse.0, mouse.1))
             {
                 return true;
             }
@@ -260,13 +259,9 @@ pub(super) fn handle_playing(
     *hovered_tile = Some(tile_pos);
 
     // Handle Sidebar Input
-    if let Some(new_mode) = sidebar.handle_input(
-        &state.player,
-        game_data,
-        interaction_mode,
-        *held_entity,
-        action_queue,
-    ) {
+    if let Some(new_mode) =
+        sidebar.handle_input(&state.player, game_data, *held_entity, action_queue)
+    {
         *interaction_mode = new_mode;
         drag_selection.cancel(); // Cancel any active drag when mode changes
     }

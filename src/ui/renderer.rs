@@ -6,7 +6,9 @@ use crate::state::{DragSelection, GamePhase, InteractionMode, MapType};
 use crate::ui::resources::GraphicsCache;
 use crate::ui::sidebar::Sidebar;
 use macroquad::prelude::*;
-use macroquad_toolkit::ui::{button_rect_tone, draw_surface, draw_ui_text, ButtonTone, SurfaceStyle};
+use macroquad_toolkit::ui::{
+    button_rect_tone, draw_surface, draw_ui_text, ButtonTone, SurfaceStyle,
+};
 
 mod tiles;
 
@@ -483,7 +485,7 @@ fn draw_game_controls() {
         (camera.down, "DOWN"),
         (camera.left, "LEFT"),
         (camera.right, "RIGHT"),
-        (camera.rotate_left, "ROT-") ,
+        (camera.rotate_left, "ROT-"),
         (camera.rotate_right, "ROT+"),
         (camera.zoom_out, "-"),
         (camera.zoom_in, "+"),

@@ -246,11 +246,7 @@ fn is_supported_hero_trigger(trigger: &str) -> bool {
             .is_some_and(|room| !room.is_empty())
 }
 
-fn validate_effects(
-    problems: &mut Vec<String>,
-    source: &str,
-    effects: &[spells::SpellEffect],
-) {
+fn validate_effects(problems: &mut Vec<String>, source: &str, effects: &[spells::SpellEffect]) {
     for (index, effect) in effects.iter().enumerate() {
         let supported = matches!(
             effect.effect_type.as_str(),
@@ -276,14 +272,10 @@ fn validate_effects(
             ("delay", effect.delay.unwrap_or(0.0)),
         ] {
             if !value.is_finite() {
-                problems.push(format!(
-                    "{source} effect {index} has non-finite {label}"
-                ));
+                problems.push(format!("{source} effect {index} has non-finite {label}"));
             }
         }
-        if effect.effect_type == "polymorph"
-            && effect.target_form.as_deref() != Some("chicken")
-        {
+        if effect.effect_type == "polymorph" && effect.target_form.as_deref() != Some("chicken") {
             problems.push(format!(
                 "{source} effect {index} has unsupported polymorph target {:?}",
                 effect.target_form

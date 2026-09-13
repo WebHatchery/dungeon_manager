@@ -110,7 +110,9 @@ fn is_polymorphed(entity: &crate::state::entities::Entity) -> bool {
         crate::state::entities::EntityType::Hero(hero) => &hero.status_effects,
         _ => return false,
     };
-    statuses.iter().any(|status| status.effect_type == "polymorph")
+    statuses
+        .iter()
+        .any(|status| status.effect_type == "polymorph")
 }
 
 fn draw_recent_health_bar(

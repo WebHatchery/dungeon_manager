@@ -64,13 +64,13 @@ fn update_wave_system(state: &mut GameState, game_data: &GameData, dt: f32) {
 
         if state.hero_base.time_until_next_wave <= 0.0 {
             // Launch the next wave!
-            launch_attack_wave(state, game_data);
+            launch_attack_wave(state);
         }
     }
 }
 
 /// Launch an attack wave - switch non-defender heroes from RestAtSpawn to DestroyHeart
-fn launch_attack_wave(state: &mut GameState, _game_data: &GameData) {
+fn launch_attack_wave(state: &mut GameState) {
     state.hero_base.current_wave_number += 1;
     state.hero_base.wave_in_progress = true;
 

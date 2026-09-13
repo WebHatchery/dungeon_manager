@@ -26,9 +26,7 @@ pub fn step_progress(state: &GameState, game_data: &GameData) -> Option<(usize, 
     let step = game_data.tutorial.steps.get(state.tutorial.step_index)?;
     match step.completion {
         TutorialCompletion::Dig { target } => Some((dig_progress(state).min(target), target)),
-        TutorialCompletion::Claim { target } => {
-            Some((claimed_tiles(state).min(target), target))
-        }
+        TutorialCompletion::Claim { target } => Some((claimed_tiles(state).min(target), target)),
         _ => None,
     }
 }

@@ -507,19 +507,22 @@ fn apply_polymorph_effect(entity_id: EntityId, effect: &SpellEffect, game_state:
     match &mut entity.entity_type {
         crate::state::entities::EntityType::Creature(creature) => {
             creature.movement_speed *= strength;
-            creature.status_effects.push(crate::state::entities::StatusEffect {
-                effect_type: "polymorph".to_string(),
-                duration,
-                strength,
-            });
+            creature
+                .status_effects
+                .push(crate::state::entities::StatusEffect {
+                    effect_type: "polymorph".to_string(),
+                    duration,
+                    strength,
+                });
         }
         crate::state::entities::EntityType::Hero(hero) => {
             hero.movement_speed *= strength;
-            hero.status_effects.push(crate::state::entities::StatusEffect {
-                effect_type: "polymorph".to_string(),
-                duration,
-                strength,
-            });
+            hero.status_effects
+                .push(crate::state::entities::StatusEffect {
+                    effect_type: "polymorph".to_string(),
+                    duration,
+                    strength,
+                });
         }
         _ => {}
     }

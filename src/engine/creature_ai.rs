@@ -3,8 +3,7 @@
 
 use crate::data::GameData;
 use crate::engine::combat;
-use crate::engine::creature_targets::{find_available_work_slot, pick_wander_position};
-use crate::engine::pathfinding::{find_path, Heuristic, PathfindingGrid, Pos};
+use crate::engine::creature_targets::find_available_work_slot;
 use crate::engine::tile_types;
 use crate::state::dungeon::Dungeon;
 use crate::state::entities::{CreatureState, EntityId, EntityManager, Task};
@@ -12,6 +11,7 @@ use crate::state::room_manager::RoomManager;
 use crate::state::tile_state::TilePos;
 
 pub(crate) mod needs;
+mod pathfinding;
 
 pub use needs::{apply_slap, calculate_work_efficiency, satisfy_need};
 
@@ -164,7 +164,12 @@ fn update_single_creature(
                     }
                 }
                 crate::engine::movement::process_entity_movement(
-                    entities, creature_id, dungeon, game_data, dt, 1.0,
+                    entities,
+                    creature_id,
+                    dungeon,
+                    game_data,
+                    dt,
+                    1.0,
                 );
                 return;
             }
@@ -227,7 +232,7 @@ fn update_single_creature(
                 .and_then(|task| get_task_target(task, room_manager, entities))
         };
 
-        pathfind_to_target(
+        pathfinding::pathfind_to_target(
             creature_id,
             current_pos,
             task_target,
@@ -240,7 +245,12 @@ fn update_single_creature(
 
     // Handle movement along path (AFTER pathfinding so we can move immediately)
     crate::engine::movement::process_entity_movement(
-        entities, creature_id, dungeon, game_data, dt, 1.0,
+        entities,
+        creature_id,
+        dungeon,
+        game_data,
+        dt,
+        1.0,
     );
 }
 
@@ -699,107 +709,5 @@ fn decide_task_from_rooms(
         Some(task)
     } else {
         Some(Task::Idle)
-    }
-}
-
-/// Pathfind creature to target position
-fn pathfind_to_target(
-    creature_id: EntityId,
-    current_pos: TilePos,
-    mut target_pos: Option<TilePos>,
-    dungeon: &Dungeon,
-    entities: &mut EntityManager,
-    room_manager: &RoomManager,
-    game_data: &GameData,
-) {
-    // Special case for Idle: pick a random wander position
-    if target_pos.is_none() {
-        let is_idle = {
-            let entity = match entities.get(creature_id) {
-                Some(e) => e,
-                None => return,
-            };
-            let creature = match entity.as_creature() {
-                Some(c) => c,
-                None => return,
-            };
-            matches!(creature.current_task, Some(Task::Idle))
-        };
-
-        if is_idle {
-            target_pos = pick_wander_position(dungeon, current_pos, room_manager, game_data);
-        }
-    }
-
-    let target = match target_pos {
-        Some(t) => t,
-        None => return,
-    };
-
-    if current_pos == target {
-        return; // Already at target
-    }
-
-    // Create pathfinding grid
-    let mut pf_grid = PathfindingGrid::new(dungeon.width, dungeon.height);
-
-    // Mark walkable tiles
-    for y in 0..dungeon.height {
-        for x in 0..dungeon.width {
-            let tile_pos = TilePos::new(x as i32, y as i32);
-            if let Some(tile) = dungeon.get_tile(tile_pos) {
-                let walkable = tile_types::is_tile_walkable(tile, game_data);
-                pf_grid.set_walkable(Pos::new(x as i32, y as i32), walkable);
-            }
-        }
-    }
-
-    // Find path
-    let start = Pos::new(current_pos.x, current_pos.y);
-    let goal = Pos::new(target.x, target.y);
-
-    let mut path_result = find_path(start, goal, &pf_grid, Heuristic::Manhattan, false);
-
-    // Fallback: If path to goal failed and goal is unwalkable (e.g. wall/building),
-    // try to path to an adjacent walkable tile.
-    if path_result.is_none() && !pf_grid.is_walkable(goal) {
-        let directions = [(0, 1), (0, -1), (1, 0), (-1, 0)];
-        let mut neighbors = Vec::new();
-
-        for (dx, dy) in directions.iter() {
-            let n = Pos::new(target.x + dx, target.y + dy);
-            // Check bounds
-            if n.x >= 0
-                && n.x < dungeon.width as i32
-                && n.y >= 0
-                && n.y < dungeon.height as i32
-                && pf_grid.is_walkable(n)
-            {
-                neighbors.push(n);
-            }
-        }
-
-        // Sort by distance to start to pick "closest" approach
-        neighbors.sort_by_key(|n| (n.x - start.x).abs() + (n.y - start.y).abs());
-
-        for n in neighbors {
-            if let Some(p) = find_path(start, n, &pf_grid, Heuristic::Manhattan, false) {
-                path_result = Some(p);
-                break;
-            }
-        }
-    }
-
-    if let Some(path) = path_result {
-        if let Some(entity) = entities.get_mut(creature_id) {
-            if let Some(creature) = entity.as_creature_mut() {
-                creature.current_path = Some(
-                    path.waypoints
-                        .iter()
-                        .map(|p| TilePos::new(p.x, p.y))
-                        .collect(),
-                );
-            }
-        }
     }
 }

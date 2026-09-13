@@ -86,11 +86,7 @@ fn lockable_doors_can_be_opened_and_closed_by_tile_action() {
     });
 
     assert_eq!(
-        crate::engine::trap_system::toggle_door_lock_at(
-            &mut state.dungeon,
-            &game_data,
-            door_pos,
-        ),
+        crate::engine::trap_system::toggle_door_lock_at(&mut state.dungeon, &game_data, door_pos,),
         Some(false)
     );
     assert!(crate::engine::tile_types::is_tile_walkable(
@@ -98,11 +94,7 @@ fn lockable_doors_can_be_opened_and_closed_by_tile_action() {
         &game_data
     ));
     assert_eq!(
-        crate::engine::trap_system::toggle_door_lock_at(
-            &mut state.dungeon,
-            &game_data,
-            door_pos,
-        ),
+        crate::engine::trap_system::toggle_door_lock_at(&mut state.dungeon, &game_data, door_pos,),
         Some(true)
     );
     assert!(!crate::engine::tile_types::is_tile_walkable(

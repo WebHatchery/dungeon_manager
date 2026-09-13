@@ -79,7 +79,12 @@ pub fn draw_main_menu(
     let layout = menu_layout::main_menu();
     draw_menu_button(layout.start, "START GAME", true, ButtonTone::Primary);
     draw_menu_button(layout.skirmish, "SKIRMISH", true, ButtonTone::Positive);
-    draw_menu_button(layout.load, "LOAD GAME", save_available, ButtonTone::Positive);
+    draw_menu_button(
+        layout.load,
+        "LOAD GAME",
+        save_available,
+        ButtonTone::Positive,
+    );
     draw_menu_button(layout.settings, "SETTINGS", true, ButtonTone::Secondary);
     if let Some(exit) = layout.exit {
         draw_menu_button(exit, "EXIT GAME", true, ButtonTone::Danger);
@@ -282,7 +287,12 @@ pub fn draw_pause_menu(save_available: bool) {
 
     draw_menu_button(layout.resume, "RESUME", true, ButtonTone::Positive);
     draw_menu_button(layout.save, "SAVE GAME", true, ButtonTone::Primary);
-    draw_menu_button(layout.load, "LOAD GAME", save_available, ButtonTone::Secondary);
+    draw_menu_button(
+        layout.load,
+        "LOAD GAME",
+        save_available,
+        ButtonTone::Secondary,
+    );
     draw_menu_button(layout.main_menu, "MAIN MENU", true, ButtonTone::Warning);
     if let Some(exit) = layout.exit {
         draw_menu_button(exit, "EXIT", true, ButtonTone::Danger);

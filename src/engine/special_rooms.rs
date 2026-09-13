@@ -139,8 +139,8 @@ fn generate_room_mana(state: &GameState, game_data: &GameData, dt: f32) -> f32 {
         .filter(|room| room.active)
         .filter_map(|room| {
             crate::engine::room_validator::room_data_for(room, game_data).map(|room_data| {
-                let passive = room.tiles.len() as f32
-                    * room_data.effects.mana_generation_per_second;
+                let passive =
+                    room.tiles.len() as f32 * room_data.effects.mana_generation_per_second;
                 let praying_creatures = state
                     .entities
                     .all()
@@ -175,12 +175,11 @@ fn burn_corpses_in_furnaces(state: &mut GameState, game_data: &GameData) -> (usi
         .iter()
         .filter(|room| room.active)
         .filter_map(|room| {
-                crate::engine::room_validator::room_data_for(room, game_data)
-                .map(|data| {
-                    data.effects.mana_per_corpse
-                        * room.efficiency
-                        * crate::engine::room_validator::room_productivity_multiplier(room, data)
-                })
+            crate::engine::room_validator::room_data_for(room, game_data).map(|data| {
+                data.effects.mana_per_corpse
+                    * room.efficiency
+                    * crate::engine::room_validator::room_productivity_multiplier(room, data)
+            })
         })
         .fold(0.0f32, f32::max);
 

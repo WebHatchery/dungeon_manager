@@ -117,7 +117,12 @@ fn active_torture_room_pulls_prisoner_and_converts() {
 #[test]
 fn prison_uses_its_authored_conversion_rate() {
     let mut game_data = GameData::load().expect("game data should load");
-    game_data.rooms.get_mut("prison").unwrap().effects.hero_conversion_rate = 1.0;
+    game_data
+        .rooms
+        .get_mut("prison")
+        .unwrap()
+        .effects
+        .hero_conversion_rate = 1.0;
     let mut entities = EntityManager::new();
     let mut room_manager = RoomManager::new();
     let mut notifications = NotificationManager::new();

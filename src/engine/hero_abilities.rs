@@ -202,10 +202,8 @@ fn evaluate_trigger(
         "on_corruption" => {
             corrupted_at(hero_entity.pos, game_state).then_some(AbilityTarget::SelfTarget)
         }
-        "on_corruption_detected" => {
-            corrupted_nearby(hero_entity, game_state, game_data)
-                .then_some(AbilityTarget::SelfTarget)
-        }
+        "on_corruption_detected" => corrupted_nearby(hero_entity, game_state, game_data)
+            .then_some(AbilityTarget::SelfTarget),
 
         // A rogue gets one opening strike against a nearby hostile while it has
         // not been hit recently. The cooldown prevents repeated procs.
@@ -315,7 +313,8 @@ fn nearby_low_health_ally(
         .filter(|e| e.id != hero_entity.id)
         .filter(|e| e.owner == hero_entity.owner)
         .filter(|e| {
-            manhattan_distance(hero_entity.pos, e.pos) <= game_data.config.hero_abilities.scan_radius
+            manhattan_distance(hero_entity.pos, e.pos)
+                <= game_data.config.hero_abilities.scan_radius
         })
         .filter_map(|e| e.as_hero().map(|h| (e.id, h.health / h.max_health)))
         .filter(|(_, health_pct)| {

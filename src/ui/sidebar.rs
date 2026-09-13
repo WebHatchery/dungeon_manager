@@ -105,7 +105,6 @@ impl Sidebar {
         &mut self,
         player: &PlayerState,
         game_data: &crate::data::GameData,
-        _current_mode: &InteractionMode,
         held_entity: Option<EntityId>,
         action_queue: &mut crate::ui::actions::ActionQueue,
     ) -> Option<InteractionMode> {

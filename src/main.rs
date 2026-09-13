@@ -113,8 +113,7 @@ impl Game {
                     );
                     self.settings.base.apply_autosave(&mut self.autosave);
                     self.game_data = Some(data);
-                    self.renderer.save_available =
-                        crate::state::save_system::any_save_exists();
+                    self.renderer.save_available = crate::state::save_system::any_save_exists();
                 }
                 Err(e) => {
                     eprintln!("Failed to load game data: {}", e);

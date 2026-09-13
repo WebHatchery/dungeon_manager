@@ -33,9 +33,7 @@ pub fn apply_terrain_damage(state: &mut GameState, game_data: &GameData, dt: f32
             continue;
         };
         match &mut entity.entity_type {
-            EntityType::Creature(creature) => {
-                creature.health = (creature.health - damage).max(0.0)
-            }
+            EntityType::Creature(creature) => creature.health = (creature.health - damage).max(0.0),
             EntityType::Hero(hero) => {
                 hero.health = (hero.health - damage).max(0.0);
                 entity.last_damage_time = state.time_elapsed;
@@ -70,7 +68,13 @@ mod tests {
 
         assert_eq!(apply_terrain_damage(&mut state, &game_data, 2.0), 1);
         assert_eq!(
-            state.entities.get(hero_id).unwrap().as_hero().unwrap().health,
+            state
+                .entities
+                .get(hero_id)
+                .unwrap()
+                .as_hero()
+                .unwrap()
+                .health,
             50.0
         );
     }

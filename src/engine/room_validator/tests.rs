@@ -83,9 +83,7 @@ fn room_entry_rules_filter_forbidden_and_underlevel_creatures() {
         Vec::new(),
     );
 
-    assert!(!creature_can_enter_room(
-        &room, "imp", 10, 50.0, &game_data
-    ));
+    assert!(!creature_can_enter_room(&room, "imp", 10, 50.0, &game_data));
     assert!(!creature_can_enter_room(
         &room, "goblin", 1, 50.0, &game_data
     ));
