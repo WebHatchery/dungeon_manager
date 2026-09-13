@@ -267,6 +267,11 @@ pub(crate) fn apply_spell_effect(
                 apply_status_effect(entity_id, effect, game_state);
             }
         }
+        "polymorph" => {
+            if let Some(entity_id) = target_entity {
+                apply_polymorph_effect(entity_id, effect, game_state);
+            }
+        }
         "tile_transform" => {
             if let Some(pos) = target_pos {
                 apply_tile_transform(pos, effect, game_state, game_data);
@@ -475,6 +480,48 @@ fn apply_status_effect(entity_id: EntityId, effect: &SpellEffect, game_state: &m
                 crate::state::entities::EntityType::ResourcePile(_) => {}
             }
         }
+    }
+}
+
+/// Turn a creature or hero into an inert visual form for the authored duration.
+///
+/// Polymorph is represented as a status rather than replacing the entity's
+/// identity, so targeting, ownership, experience, and save compatibility all
+/// survive the temporary transformation. Combat treats the status as
+/// helpless and the renderer gives the transformed entity a distinct color.
+fn apply_polymorph_effect(entity_id: EntityId, effect: &SpellEffect, game_state: &mut GameState) {
+    let Some(target_form) = effect.target_form.as_deref() else {
+        eprintln!("Polymorph effect is missing target_form");
+        return;
+    };
+    if target_form != "chicken" {
+        eprintln!("Unsupported polymorph target form: {target_form}");
+        return;
+    }
+
+    let Some(entity) = game_state.entities.get_mut(entity_id) else {
+        return;
+    };
+    let duration = effect.duration.unwrap_or(10.0).max(0.0);
+    let strength = 0.1;
+    match &mut entity.entity_type {
+        crate::state::entities::EntityType::Creature(creature) => {
+            creature.movement_speed *= strength;
+            creature.status_effects.push(crate::state::entities::StatusEffect {
+                effect_type: "polymorph".to_string(),
+                duration,
+                strength,
+            });
+        }
+        crate::state::entities::EntityType::Hero(hero) => {
+            hero.movement_speed *= strength;
+            hero.status_effects.push(crate::state::entities::StatusEffect {
+                effect_type: "polymorph".to_string(),
+                duration,
+                strength,
+            });
+        }
+        _ => {}
     }
 }
 

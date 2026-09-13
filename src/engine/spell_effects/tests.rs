@@ -1,5 +1,6 @@
 use super::*;
 use crate::data::GameData;
+use crate::engine::combat::resolve_combat_tick;
 use crate::state::entities::HeroState;
 
 #[test]
@@ -32,6 +33,7 @@ fn heal_effect_heals_heroes() {
         from_tile: None,
         to_tile: None,
         radius: None,
+        target_form: None,
     };
     apply_heal_effect(hero_id, &effect, &mut game_state);
 
@@ -57,6 +59,7 @@ fn spawn_entity_effect_supports_non_imp_creatures() {
         from_tile: None,
         to_tile: None,
         radius: None,
+        target_form: None,
     };
     spawn_entity_effect(TilePos::new(2, 2), &effect, &mut game_state, &game_data);
 
@@ -95,6 +98,7 @@ fn stat_modifier_speed_buff_reverts_after_duration() {
         from_tile: None,
         to_tile: None,
         radius: None,
+        target_form: None,
     };
     apply_stat_modifier(creature_id, &effect, &mut game_state);
 
@@ -119,4 +123,43 @@ fn stat_modifier_speed_buff_reverts_after_duration() {
         .unwrap()
         .movement_speed;
     assert_eq!(reverted_speed, base_speed);
+}
+
+#[test]
+fn chickenify_disables_and_reverts_a_hero() {
+    let game_data = GameData::load().expect("game data should load");
+    let mut game_state = GameState::new(20, 20, &game_data);
+    let hero = HeroState::new(
+        "peasant".to_string(),
+        1,
+        100.0,
+        10.0,
+        TilePos::new(1, 1),
+        1.0,
+        1,
+    );
+    let hero_id = game_state.entities.spawn_hero(TilePos::new(1, 1), hero);
+    let effect = game_data.spells["chickenify"].effects[0].clone();
+
+    apply_spell_effect(&effect, &mut game_state, &game_data, None, Some(hero_id));
+    let transformed = game_state.entities.get(hero_id).unwrap();
+    assert!(transformed
+        .as_hero()
+        .unwrap()
+        .status_effects
+        .iter()
+        .any(|status| status.effect_type == "polymorph"));
+    assert_eq!(
+        resolve_combat_tick(transformed, transformed, 1.0, &game_data, 0.0, (0.0, 0.0))
+            .damage_dealt,
+        0.0
+    );
+
+    crate::engine::combat::update_status_effects(
+        game_state.entities.get_mut(hero_id).unwrap(),
+        effect.duration.unwrap() + 1.0,
+    );
+    let restored = game_state.entities.get(hero_id).unwrap().as_hero().unwrap();
+    assert!(restored.status_effects.is_empty());
+    assert_eq!(restored.movement_speed, 1.5);
 }

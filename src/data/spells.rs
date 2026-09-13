@@ -68,6 +68,8 @@ pub struct SpellEffect {
     pub to_tile: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub radius: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_form: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

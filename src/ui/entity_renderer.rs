@@ -48,15 +48,19 @@ pub fn draw_entities(
             continue;
         }
 
-        let texture: Option<Texture2D> = match &entity.entity_type {
-            crate::state::entities::EntityType::Creature(creature) => {
-                graphics.get_creature_texture(&creature.creature_id, creature.visual_seed)
+        let texture: Option<Texture2D> = if is_polymorphed(entity) {
+            None
+        } else {
+            match &entity.entity_type {
+                crate::state::entities::EntityType::Creature(creature) => {
+                    graphics.get_creature_texture(&creature.creature_id, creature.visual_seed)
+                }
+                crate::state::entities::EntityType::Hero(hero) => {
+                    graphics.get_hero_texture(&hero.hero_id, hero.visual_seed)
+                }
+                crate::state::entities::EntityType::Structure(_) => None,
+                crate::state::entities::EntityType::ResourcePile(_) => None,
             }
-            crate::state::entities::EntityType::Hero(hero) => {
-                graphics.get_hero_texture(&hero.hero_id, hero.visual_seed)
-            }
-            crate::state::entities::EntityType::Structure(_) => None,
-            crate::state::entities::EntityType::ResourcePile(_) => None,
         };
 
         if let Some(ref texture) = texture {
@@ -87,13 +91,26 @@ fn draw_resource_pile(graphics: &GraphicsCache, x: f32, z: f32, resource_type: &
 }
 
 fn draw_entity_fallback(entity: &crate::state::entities::Entity, x: f32, z: f32) {
-    let color = match &entity.entity_type {
-        crate::state::entities::EntityType::Hero(_) => Color::new(0.2, 0.8, 0.2, 1.0),
-        crate::state::entities::EntityType::Creature(_) => Color::new(0.8, 0.2, 0.2, 1.0),
-        crate::state::entities::EntityType::Structure(_) => Color::new(0.5, 0.5, 0.5, 1.0),
-        crate::state::entities::EntityType::ResourcePile(_) => GOLD,
+    let color = if is_polymorphed(entity) {
+        Color::new(1.0, 0.85, 0.2, 1.0)
+    } else {
+        match &entity.entity_type {
+            crate::state::entities::EntityType::Hero(_) => Color::new(0.2, 0.8, 0.2, 1.0),
+            crate::state::entities::EntityType::Creature(_) => Color::new(0.8, 0.2, 0.2, 1.0),
+            crate::state::entities::EntityType::Structure(_) => Color::new(0.5, 0.5, 0.5, 1.0),
+            crate::state::entities::EntityType::ResourcePile(_) => GOLD,
+        }
     };
     draw_cube_wires(vec3(x, 0.5, z), vec3(0.5, 1.0, 0.5), color);
+}
+
+fn is_polymorphed(entity: &crate::state::entities::Entity) -> bool {
+    let statuses = match &entity.entity_type {
+        crate::state::entities::EntityType::Creature(creature) => &creature.status_effects,
+        crate::state::entities::EntityType::Hero(hero) => &hero.status_effects,
+        _ => return false,
+    };
+    statuses.iter().any(|status| status.effect_type == "polymorph")
 }
 
 fn draw_recent_health_bar(

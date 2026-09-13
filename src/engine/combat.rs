@@ -146,7 +146,7 @@ pub fn resolve_combat_tick(
     }
 }
 
-/// True if the entity has an active "stun" status effect (can't attack this tick).
+/// True if the entity has an active disabling status (can't attack this tick).
 fn is_stunned(entity: &Entity) -> bool {
     let status_effects = match &entity.entity_type {
         crate::state::entities::EntityType::Creature(state) => &state.status_effects,
@@ -156,7 +156,9 @@ fn is_stunned(entity: &Entity) -> bool {
     };
     status_effects
         .iter()
-        .any(|e| e.effect_type == "stun" || e.effect_type == "charm")
+        .any(|e| {
+            e.effect_type == "stun" || e.effect_type == "charm" || e.effect_type == "polymorph"
+        })
 }
 
 fn get_type_name(entity_type: &crate::state::entities::EntityType) -> String {
@@ -628,7 +630,9 @@ fn expired_speed_multipliers(status_effects: &[StatusEffect]) -> Vec<f32> {
         .iter()
         .filter(|e| {
             e.duration <= 0.0
-                && (e.effect_type == "speed_modifier" || e.effect_type == "freeze")
+                && (e.effect_type == "speed_modifier"
+                    || e.effect_type == "freeze"
+                    || e.effect_type == "polymorph")
                 && e.strength != 0.0
         })
         .map(|e| e.strength)
@@ -636,7 +640,7 @@ fn expired_speed_multipliers(status_effects: &[StatusEffect]) -> Vec<f32> {
 }
 
 /// Update status effects on an entity: ticks duration down, applies poison/burn damage over
-/// time, and reverts freeze/speed_modifier movement-speed changes once they expire. Stun/charm has no
+/// time, and reverts movement-speed changes once they expire. Stun/charm/polymorph has no
 /// per-tick effect here; combat::resolve_combat_tick checks for it directly before an attack.
 pub fn update_status_effects(entity: &mut Entity, dt: f32) {
     match &mut entity.entity_type {
