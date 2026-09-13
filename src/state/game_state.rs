@@ -357,7 +357,7 @@ impl GameState {
         // powers spells and rooms. The data field keeps this rule extensible to
         // future creatures without another species branch here.
         crate::engine::mana_upkeep::apply_mana_upkeep(
-            &mut self.entities,
+            &self.entities,
             &mut self.player,
             game_data,
             dt,

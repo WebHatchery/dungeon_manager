@@ -34,9 +34,6 @@ use std::path::{Path, PathBuf};
 /// TODO.md. **Shrink this list; do not grow it.** Adding a name here is a
 /// decision to ship data that does nothing, and should be made deliberately.
 const UNCONSUMED: &[&str] = &[
-    // Room AI hints beyond `task_type`/`max_creatures`.
-    "AIData::forbidden_creatures",
-    "AIData::entry_conditions",
     // Per-room wall art is authored but never generated or drawn.
     "RoomVisualData::wall_sprite",
     // Lighting and atmosphere pass.
@@ -56,8 +53,6 @@ const UNCONSUMED: &[&str] = &[
     "ThreatResponse::call_for_aid",
     "HeroProgressionData::level_range",
     "HeroProgressionData::elite_variants",
-    // Scenario availability by level.
-    "AvailabilityRule::min_level",
     // Config knobs with no consumer.
     "CombatConfig::creature_health_per_level",
     "CombatConfig::hero_health_per_level",
