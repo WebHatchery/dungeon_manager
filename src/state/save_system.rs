@@ -19,7 +19,9 @@ use crate::state::game_state::GameState;
 // Imported by function rather than by module: the toolkit exports its own
 // `SaveSlot` (a metadata header), and this module's `SaveSlot` is a slot
 // *identity*. Naming both would be the drift hazard, not the convenience.
-use macroquad_toolkit::persistence::{load_from_slot, save_to_slot_with_version, slot_exists};
+use macroquad_toolkit::persistence::{
+    delete_slot, load_from_slot, save_to_slot_with_version, slot_exists,
+};
 use serde::{Deserialize, Serialize};
 
 const GAME_NAME: &str = "dungeon_manager";
@@ -157,6 +159,12 @@ pub fn save_game(game_state: &GameState, slot: SaveSlot) -> Result<(), String> {
     save_to_slot_with_version(GAME_NAME, &slot.key(), &file, SAVE_FORMAT_VERSION)
 }
 
+/// Delete a save and its pre-slot-format counterpart, if one is still present.
+pub fn delete_game(slot: SaveSlot) -> Result<(), String> {
+    delete_slot(GAME_NAME, &slot.key())?;
+    delete_legacy(slot)
+}
+
 /// Load from a slot, falling back to a save the old build wrote.
 ///
 /// Stamps `active_slot` on the way out. `active_slot` is `#[serde(skip)]`, so a
@@ -277,6 +285,26 @@ fn legacy_exists(slot: SaveSlot) -> bool {
     #[cfg(not(target_arch = "wasm32"))]
     {
         macroquad_toolkit::persistence::file_exists(format!("{key}.json"))
+    }
+}
+
+fn delete_legacy(slot: SaveSlot) -> Result<(), String> {
+    let key = format!("save_{}", slot.key());
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        crate::state::wasm_storage::storage_remove(&key);
+        Ok(())
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let path = std::path::PathBuf::from(format!("{key}.json"));
+        if path.exists() {
+            std::fs::remove_file(&path)
+                .map_err(|error| format!("Failed to delete legacy save: {error}"))?;
+        }
+        Ok(())
     }
 }
 

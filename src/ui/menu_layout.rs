@@ -150,6 +150,11 @@ pub fn slot_browser_back() -> Rect {
     )
 }
 
+/// Destructive action kept separate from a row's load/save hit target.
+pub fn slot_delete_button(row: Rect) -> Rect {
+    Rect::new(row.x + row.w - 112.0, row.y + 18.0, 94.0, 38.0)
+}
+
 /// "Next Mission" button on the victory screen.
 pub fn game_over_next_mission() -> Rect {
     Rect::new(

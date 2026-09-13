@@ -29,12 +29,6 @@ use crate::state::entities::{Entity, EntityId, EntityType};
 use crate::state::game_state::GameState;
 use crate::state::tile_state::TilePos;
 
-/// How far (in tiles, Manhattan) a hero scans for allies/enemies for trigger evaluation.
-const ABILITY_SCAN_RADIUS: i32 = 8;
-/// Health fraction below which "low health" triggers fire.
-const LOW_HEALTH_THRESHOLD: f32 = 0.4;
-/// How recently the hero must have taken damage for "on_hit" to fire.
-const RECENT_HIT_WINDOW: f32 = 0.15;
 /// Passive abilities authored with cooldown 0 still get a floor so they don't reapply (and
 /// stack) their effects every single simulation tick.
 const MIN_PASSIVE_INTERVAL: f32 = 1.0;
@@ -157,19 +151,19 @@ fn evaluate_trigger(
         // low-health rally, just a different flavor of ability.
         "on_low_health" | "on_self_low_health" | "defensive" => {
             let hero = hero_entity.as_hero()?;
-            (hero.health / hero.max_health < LOW_HEALTH_THRESHOLD)
+            (hero.health / hero.max_health < game_data.config.hero_abilities.low_health_threshold)
                 .then_some(AbilityTarget::SelfTarget)
         }
 
         "on_hit" | "on_damaged" => {
             let since_hit = game_state.time_elapsed - hero_entity.last_damage_time;
-            (0.0..RECENT_HIT_WINDOW)
+            (0.0..game_data.config.hero_abilities.recent_hit_window)
                 .contains(&since_hit)
                 .then_some(AbilityTarget::SelfTarget)
         }
 
         "on_ally_low_health" | "on_party_damaged" => {
-            nearby_low_health_ally(hero_entity, game_state).map(AbilityTarget::Entity)
+            nearby_low_health_ally(hero_entity, game_state, game_data).map(AbilityTarget::Entity)
         }
 
         // A precise, single-target proc: nearest hostile entity in range.
@@ -200,7 +194,7 @@ fn evaluate_trigger(
         // A ritual is detectable from nearby tiles, so the ability can fire
         // before the hero is standing inside the circle itself.
         "on_ritual_detected" => {
-            ritual_nearby(hero_entity, game_state).map(|_| AbilityTarget::SelfTarget)
+            ritual_nearby(hero_entity, game_state, game_data).map(|_| AbilityTarget::SelfTarget)
         }
 
         // Corruption is a tile condition. Purification is self-targeted while
@@ -209,13 +203,14 @@ fn evaluate_trigger(
             corrupted_at(hero_entity.pos, game_state).then_some(AbilityTarget::SelfTarget)
         }
         "on_corruption_detected" => {
-            corrupted_nearby(hero_entity, game_state).then_some(AbilityTarget::SelfTarget)
+            corrupted_nearby(hero_entity, game_state, game_data)
+                .then_some(AbilityTarget::SelfTarget)
         }
 
         // A rogue gets one opening strike against a nearby hostile while it has
         // not been hit recently. The cooldown prevents repeated procs.
         "on_sneak_attack" => {
-            let recently_hit = (0.0..RECENT_HIT_WINDOW)
+            let recently_hit = (0.0..game_data.config.hero_abilities.recent_hit_window)
                 .contains(&(game_state.time_elapsed - hero_entity.last_damage_time));
             (!recently_hit)
                 .then(|| {
@@ -253,14 +248,19 @@ fn evaluate_trigger(
     }
 }
 
-fn ritual_nearby(hero_entity: &Entity, game_state: &GameState) -> Option<TilePos> {
+fn ritual_nearby(
+    hero_entity: &Entity,
+    game_state: &GameState,
+    game_data: &GameData,
+) -> Option<TilePos> {
     game_state
         .room_manager
         .rooms
         .iter()
         .filter(|room| room.active && room.room_type == "ritual_circle")
         .filter(|room| {
-            manhattan_distance(hero_entity.pos, room.get_center()) <= ABILITY_SCAN_RADIUS
+            manhattan_distance(hero_entity.pos, room.get_center())
+                <= game_data.config.hero_abilities.scan_radius
         })
         .min_by_key(|room| manhattan_distance(hero_entity.pos, room.get_center()))
         .map(|room| room.get_center())
@@ -273,7 +273,7 @@ fn corrupted_at(pos: TilePos, game_state: &GameState) -> bool {
         .is_some_and(|tile| tile.tile_type == "corrupted_floor")
 }
 
-fn corrupted_nearby(hero_entity: &Entity, game_state: &GameState) -> bool {
+fn corrupted_nearby(hero_entity: &Entity, game_state: &GameState, game_data: &GameData) -> bool {
     game_state
         .dungeon
         .grid
@@ -281,7 +281,8 @@ fn corrupted_nearby(hero_entity: &Entity, game_state: &GameState) -> bool {
         .flat_map(|row| row.iter())
         .any(|tile| {
             tile.tile_type == "corrupted_floor"
-                && manhattan_distance(hero_entity.pos, tile.pos) <= ABILITY_SCAN_RADIUS
+                && manhattan_distance(hero_entity.pos, tile.pos)
+                    <= game_data.config.hero_abilities.scan_radius
         })
 }
 
@@ -303,15 +304,23 @@ fn area_target(
 }
 
 /// Nearest same-owner hero below the low-health threshold within scan range, if any.
-fn nearby_low_health_ally(hero_entity: &Entity, game_state: &GameState) -> Option<EntityId> {
+fn nearby_low_health_ally(
+    hero_entity: &Entity,
+    game_state: &GameState,
+    game_data: &GameData,
+) -> Option<EntityId> {
     game_state
         .entities
         .all()
         .filter(|e| e.id != hero_entity.id)
         .filter(|e| e.owner == hero_entity.owner)
-        .filter(|e| manhattan_distance(hero_entity.pos, e.pos) <= ABILITY_SCAN_RADIUS)
+        .filter(|e| {
+            manhattan_distance(hero_entity.pos, e.pos) <= game_data.config.hero_abilities.scan_radius
+        })
         .filter_map(|e| e.as_hero().map(|h| (e.id, h.health / h.max_health)))
-        .filter(|(_, health_pct)| *health_pct < LOW_HEALTH_THRESHOLD)
+        .filter(|(_, health_pct)| {
+            *health_pct < game_data.config.hero_abilities.low_health_threshold
+        })
         .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
         .map(|(id, _)| id)
 }
@@ -320,7 +329,7 @@ fn nearby_low_health_ally(hero_entity: &Entity, game_state: &GameState) -> Optio
 fn nearby_enemies(
     hero_entity: &Entity,
     game_state: &GameState,
-    _game_data: &GameData,
+    game_data: &GameData,
 ) -> Vec<EntityId> {
     let mut enemies: Vec<(EntityId, i32)> = game_state
         .entities
@@ -329,7 +338,7 @@ fn nearby_enemies(
         .filter(|e| e.is_alive())
         .filter(|e| hero_entity.owner.is_hostile_to(&e.owner))
         .map(|e| (e.id, manhattan_distance(hero_entity.pos, e.pos)))
-        .filter(|(_, dist)| *dist <= ABILITY_SCAN_RADIUS)
+        .filter(|(_, dist)| *dist <= game_data.config.hero_abilities.scan_radius)
         .collect();
     enemies.sort_by_key(|(_, dist)| *dist);
     enemies.into_iter().map(|(id, _)| id).collect()

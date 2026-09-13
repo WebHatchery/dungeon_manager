@@ -8,9 +8,9 @@ pub(super) fn process_claiming(
     imp_id: EntityId,
     target_pos: TilePos,
     dt: f32,
-    _game_data: &GameData,
+    game_data: &GameData,
 ) {
-    let claim_delay = 2.0; // Hardcoded delay for now, could be in config
+    let claim_delay = game_data.config.imp_behavior.claim_completion_delay;
     let mut task_complete = false;
 
     if let Some(entity) = entities.get_mut(imp_id) {

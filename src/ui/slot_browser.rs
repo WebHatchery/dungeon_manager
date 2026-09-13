@@ -102,6 +102,14 @@ pub fn draw(browser: &SlotBrowser) {
             17.0,
             colors::TEXT_DIM,
         );
+        if entry.occupied {
+            let _ = button_rect_tone(
+                menu_layout::slot_delete_button(*rect),
+                "DELETE",
+                true,
+                ButtonTone::Danger,
+            );
+        }
     }
 
     let _ = button_rect_tone(
@@ -109,6 +117,16 @@ pub fn draw(browser: &SlotBrowser) {
         "BACK",
         true,
         ButtonTone::Secondary,
+    );
+
+    let hint = "Click a slot to load/save, or DELETE to remove it";
+    let dims = measure_ui_text(hint, None, 15, 1.0);
+    draw_ui_text(
+        hint,
+        screen_width() / 2.0 - dims.width / 2.0,
+        screen_height() - 102.0,
+        15.0,
+        colors::TEXT_DIM,
     );
 }
 

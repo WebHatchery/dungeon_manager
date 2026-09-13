@@ -28,6 +28,22 @@ fn handle_slot_browser(state: &mut GameState) {
         return;
     }
 
+    if let Some(slot) = super::menus::clicked_slot_delete(browser) {
+        match crate::state::save_system::delete_game(slot) {
+            Ok(()) => {
+                state
+                    .notifications
+                    .success(format!("Deleted save from {slot}."));
+                state.save_availability_dirty = true;
+                state.slot_browser = Some(SlotBrowser::open(purpose));
+            }
+            Err(error) => state
+                .notifications
+                .danger(format!("Delete failed: {error}")),
+        }
+        return;
+    }
+
     let Some(slot) = super::menus::clicked_slot(browser) else {
         return;
     };
@@ -116,6 +132,51 @@ pub(super) fn handle_playing(
             }
         }
         return false; // Block other input
+    }
+
+    // Quick actions always use the active slot. They are available from both
+    // the running game and the pause overlay; choosing a different slot stays
+    // in the browser above.
+    if is_key_pressed(KeyCode::F5) {
+        let slot = state.active_slot;
+        match crate::state::save_system::save_game(state, slot) {
+            Ok(()) => {
+                state.save_availability_dirty = true;
+                state
+                    .notifications
+                    .success(format!("Quick-saved to {slot}!"));
+            }
+            Err(error) => state
+                .notifications
+                .danger(format!("Quick-save failed: {error}")),
+        }
+        return false;
+    }
+
+    if is_key_pressed(KeyCode::F9) {
+        let slot = state.active_slot;
+        if !crate::state::save_system::save_exists(slot) {
+            state
+                .notifications
+                .warning(format!("No save exists in {slot}."));
+            return false;
+        }
+        match crate::state::save_system::load_game(slot) {
+            Ok(loaded_state) => {
+                *state = loaded_state;
+                state.save_availability_dirty = true;
+                sidebar.clear_selection();
+                drag_selection.cancel();
+                *interaction_mode = InteractionMode::None;
+                *held_entity = None;
+                *selected_entity = None;
+                *selected_room = None;
+            }
+            Err(error) => state
+                .notifications
+                .danger(format!("Quick-load failed: {error}")),
+        }
+        return false;
     }
 
     if is_key_pressed(KeyCode::Escape) {

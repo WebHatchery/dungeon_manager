@@ -18,6 +18,8 @@ pub struct GameConfig {
     pub combat_ranges: CombatRangesConfig,
     pub task_execution: TaskExecutionConfig,
     pub imp_behavior: ImpBehaviorConfig,
+    #[serde(default)]
+    pub hero_abilities: HeroAbilityConfig,
     pub spawning: SpawningConfig,
     pub traps: TrapConfig,
     pub dungeon: DungeonConfig,
@@ -179,10 +181,33 @@ pub struct TaskExecutionConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ImpBehaviorConfig {
     pub dig_completion_delay: f32,
+    #[serde(default = "default_claim_completion_delay")]
+    pub claim_completion_delay: f32,
     pub gem_priority_bonus: f32,
     pub gold_vein_reward: i32,
     pub gem_seam_reward: i32,
     pub mana_crystal_reward: i32,
+}
+
+fn default_claim_completion_delay() -> f32 {
+    2.0
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HeroAbilityConfig {
+    pub scan_radius: i32,
+    pub low_health_threshold: f32,
+    pub recent_hit_window: f32,
+}
+
+impl Default for HeroAbilityConfig {
+    fn default() -> Self {
+        Self {
+            scan_radius: 8,
+            low_health_threshold: 0.4,
+            recent_hit_window: 0.15,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

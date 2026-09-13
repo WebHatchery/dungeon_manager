@@ -29,6 +29,27 @@ pub(crate) fn clicked_slot(browser: &SlotBrowser) -> Option<crate::state::save_s
         .map(|(entry, _)| entry.slot)
 }
 
+/// Which occupied row's destructive button was just pressed, if any.
+pub(crate) fn clicked_slot_delete(
+    browser: &SlotBrowser,
+) -> Option<crate::state::save_system::SaveSlot> {
+    if !is_mouse_button_pressed(MouseButton::Left) {
+        return None;
+    }
+    let mouse = mouse_position();
+    let mouse = vec2(mouse.0, mouse.1);
+    let rows = crate::ui::menu_layout::slot_rows(browser.entries.len());
+
+    browser
+        .entries
+        .iter()
+        .zip(rows.iter())
+        .find(|(entry, rect)| {
+            entry.occupied && crate::ui::menu_layout::slot_delete_button(**rect).contains(mouse)
+        })
+        .map(|(entry, _)| entry.slot)
+}
+
 /// Did the mouse just click the browser's Back button?
 pub(crate) fn clicked_slot_browser_back() -> bool {
     let mouse = mouse_position();
@@ -44,6 +65,18 @@ pub(super) fn handle_load_game(phase: &mut GamePhase) {
 
     if clicked_slot_browser_back() || is_key_pressed(KeyCode::Escape) {
         *phase = GamePhase::MainMenu;
+        return;
+    }
+
+    if let Some(slot) = clicked_slot_delete(browser) {
+        match crate::state::save_system::delete_game(slot) {
+            Ok(()) => {
+                *phase = GamePhase::LoadGame(SlotBrowser::open(browser.purpose));
+            }
+            Err(error) => {
+                eprintln!("Failed to delete {slot}: {error}");
+            }
+        }
         return;
     }
 

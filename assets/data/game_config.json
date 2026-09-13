@@ -100,10 +100,16 @@
   },
   "imp_behavior": {
     "dig_completion_delay": 2.0,
+    "claim_completion_delay": 2.0,
     "gem_priority_bonus": 10000.0,
     "gold_vein_reward": 100,
     "gem_seam_reward": 25,
     "mana_crystal_reward": 20
+  },
+  "hero_abilities": {
+    "scan_radius": 8,
+    "low_health_threshold": 0.4,
+    "recent_hit_window": 0.15
   },
   "spawning": {
     "monster_spawner_interval": 60.0,
