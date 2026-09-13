@@ -249,6 +249,7 @@ pub struct SettingsMenuLayout {
     pub fullscreen: Rect,
     pub ui_scale: Rect,
     pub difficulty: Rect,
+    pub autosave: Rect,
     pub back: Rect,
 }
 
@@ -258,6 +259,7 @@ pub fn settings_menu() -> SettingsMenuLayout {
         fullscreen: stacked(start_y, 0),
         ui_scale: stacked(start_y, 1),
         difficulty: stacked(start_y, 2),
-        back: stacked(start_y, 3),
+        autosave: stacked(start_y, 3),
+        back: stacked(start_y, 4),
     }
 }

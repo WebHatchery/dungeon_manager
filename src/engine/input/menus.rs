@@ -274,6 +274,11 @@ pub(super) fn handle_settings(
         settings.cycle_difficulty();
     }
 
+    if clicked(layout.autosave) {
+        settings.base.autosave_enabled = !settings.base.autosave_enabled;
+        settings.save();
+    }
+
     if clicked(layout.back) || is_key_pressed(KeyCode::Escape) {
         *phase = GamePhase::MainMenu;
     }

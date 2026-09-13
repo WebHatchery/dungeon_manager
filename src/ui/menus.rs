@@ -245,6 +245,13 @@ pub fn draw_settings_menu(settings: &GameSettings) {
         ButtonTone::Secondary,
     );
 
+    let autosave_label = if settings.base.autosave_enabled {
+        "AUTOSAVE: ON"
+    } else {
+        "AUTOSAVE: OFF"
+    };
+    draw_menu_button(layout.autosave, autosave_label, true, ButtonTone::Secondary);
+
     draw_menu_button(layout.back, "BACK", true, ButtonTone::Muted);
 
     let hint = "Press ESC to return";
@@ -280,6 +287,16 @@ pub fn draw_pause_menu(save_available: bool) {
     if let Some(exit) = layout.exit {
         draw_menu_button(exit, "EXIT", true, ButtonTone::Danger);
     }
+
+    let hint = "F5 quick-save   ·   F9 quick-load active slot";
+    let dims = measure_ui_text(hint, None, 16, 1.0);
+    draw_ui_text(
+        hint,
+        screen_width() / 2.0 - dims.width / 2.0,
+        screen_height() - 28.0,
+        16.0,
+        colors::TEXT_DIM,
+    );
 }
 
 /// Draw the game over screen (victory or defeat)

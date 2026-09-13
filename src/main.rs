@@ -111,6 +111,7 @@ impl Game {
                     self.autosave = macroquad_toolkit::persistence::AutoSaveManager::new(
                         data.config.timing.autosave_interval,
                     );
+                    self.settings.base.apply_autosave(&mut self.autosave);
                     self.game_data = Some(data);
                     self.renderer.save_available =
                         crate::state::save_system::any_save_exists();
@@ -150,6 +151,9 @@ impl Game {
             &mut self.settings,
             self.renderer.save_available,
         );
+
+        // Settings can change in the menu while the scheduler remains alive.
+        self.settings.base.apply_autosave(&mut self.autosave);
 
         // Process queued actions
         if let GamePhase::Playing(ref mut state) = self.phase {

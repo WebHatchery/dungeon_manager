@@ -24,6 +24,7 @@ Keep the dungeon heart alive while growing a self-sustaining underground empire 
 - Tap Cancel, Unmark, or Slap above the sidebar for the common right-click actions.
 - Tap Begin Mission on the intro and Return to Menu after a defeat or final victory.
 - Space or Escape pauses; the pause menu also exposes Save, Load, and Main Menu.
+- F5 quick-saves and F9 quick-loads the active slot; Settings can disable autosave.
 
 ## Current Scope
 
