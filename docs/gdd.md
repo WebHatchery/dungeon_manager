@@ -18,14 +18,14 @@ Here’s a **concise but complete 2D isometric Game Design Document** for a **Du
 
 ### Target Platform
 
-- PC (Windows, Linux)
-- Keyboard + mouse
+- Browser and PC (Windows, Linux)
+- Touch-first controls with keyboard + mouse shortcuts
 
 ### Engine & Tech
 
 - **Language:** Rust
 - **Rendering:** Macroquad
-- **ECS-based architecture**
+- Explicit `GameState` and `EntityManager` ownership with focused Rust modules
 - Deterministic simulation for replay/debugging
 - Data-driven content via JSON / RON
 
@@ -295,10 +295,9 @@ Unlocked via Library:
 
 ## 14. Technical Architecture (Rust)
 
-### ECS
+### Simulation architecture
 
-- Bevy ECS
-- Systems:
+- Explicit state-owned systems:
   - AI Decision
   - Pathfinding
   - Room Validation
@@ -344,5 +343,5 @@ Unlocked via Library:
 
 - Indirect control reduces micro
 - Isometric 2D keeps art scope sane
-- Rust + ECS supports large simulations
+- Rust's explicit state ownership supports large simulations
 - Dungeon Keeper fantasy remains intact

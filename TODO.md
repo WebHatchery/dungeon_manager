@@ -18,16 +18,13 @@
 
 ## Touch controls and onboarding
 
-- [ ] Add visible controls/gestures for camera pan, rotation, zoom, cancel/unmark/slap, and return-to-menu after defeat or final victory; these currently depend on keyboard, wheel, or right-click input in `engine/input/playing.rs` and `tile_actions.rs` (§7.5).
 - [ ] Replace hand-rolled menu/sidebar press hit-tests with toolkit release buttons where immediate activation is unnecessary. Share layout between drawing and input, and verify controls/tutorial overlays fit narrow browser windows and supported text scales (§7.4–7.5).
-- [ ] Give the intro an explicit visible Begin control; update tutorial, menu, README, and `game_page.json` shortcut instructions to name exact tap controls. Extend tutorial progression through combat, traps, wages/moods, research, and surviving the first hero wave; add later contextual guidance for spells, prison/torture, and temple use (§7.5).
+- [ ] Extend tutorial progression through combat, traps, wages/moods, research, and surviving the first hero wave; add later contextual guidance for spells, prison/torture, and temple use (§7.5).
 - [ ] Verify one full mission from start through recovery using touch controls, plus desktop layouts; replace matching captures directly in `docs/verification/` and run parameterless `publish.ps1` after implementation (§8.3, §12).
 
 ## Gameplay and authored content
 
-- [ ] Implement remaining monster ability hooks for `charge`, `smash`, `berserk`, and `charm`; make combat speed-modifier application and expiry symmetric, including projectile impacts.
-- [ ] Implement the `polymorph` effect used by `chickenify`, and the missing ritual/corruption/stealth/trap triggers behind dispel, purify, backstab, teleport, and mass_cleanse; validate unsupported authoring instead of silently accepting inert abilities.
-- [ ] Connect `SpecialData::triggers_event` to scenario events and add a conversion-count objective trigger so authored conversion goals can complete.
+- [ ] Implement the `polymorph` effect used by `chickenify`, and validate unsupported hero-effect authoring instead of silently accepting inert effects.
 - [ ] Add room efficiency rules for adjacency, shape, and doors; support creature contributions to ritual output. Resolve construction-time scale before adding per-tile build progress, or remove that unused field.
 - [ ] Complete defensive interactions: imp trap rearming, magical door locking, alarm responses, player-directed wall reinforcement, and terrain damage for wall-breaking creatures. Reconcile Gatehouse behavior with `docs/ROOM_SET.md`.
 - [ ] Implement authored mana upkeep for Ironbound/Balor and environmental terrain damage/movement effects; ensure their descriptions and balance values match actual behavior.

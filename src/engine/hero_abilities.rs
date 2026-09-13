@@ -199,15 +199,18 @@ fn evaluate_trigger(
 
         // A ritual is detectable from nearby tiles, so the ability can fire
         // before the hero is standing inside the circle itself.
-        "on_ritual_detected" => ritual_nearby(hero_entity, game_state)
-            .map(|_| AbilityTarget::SelfTarget),
+        "on_ritual_detected" => {
+            ritual_nearby(hero_entity, game_state).map(|_| AbilityTarget::SelfTarget)
+        }
 
         // Corruption is a tile condition. Purification is self-targeted while
         // mass cleansing is also gated by the same nearby scan.
-        "on_corruption" => corrupted_at(hero_entity.pos, game_state)
-            .then_some(AbilityTarget::SelfTarget),
-        "on_corruption_detected" => corrupted_nearby(hero_entity, game_state)
-            .then_some(AbilityTarget::SelfTarget),
+        "on_corruption" => {
+            corrupted_at(hero_entity.pos, game_state).then_some(AbilityTarget::SelfTarget)
+        }
+        "on_corruption_detected" => {
+            corrupted_nearby(hero_entity, game_state).then_some(AbilityTarget::SelfTarget)
+        }
 
         // A rogue gets one opening strike against a nearby hostile while it has
         // not been hit recently. The cooldown prevents repeated procs.
@@ -215,7 +218,11 @@ fn evaluate_trigger(
             let recently_hit = (0.0..RECENT_HIT_WINDOW)
                 .contains(&(game_state.time_elapsed - hero_entity.last_damage_time));
             (!recently_hit)
-                .then(|| nearby_enemies(hero_entity, game_state, game_data).into_iter().next())
+                .then(|| {
+                    nearby_enemies(hero_entity, game_state, game_data)
+                        .into_iter()
+                        .next()
+                })
                 .flatten()
                 .map(AbilityTarget::Entity)
         }
@@ -252,7 +259,9 @@ fn ritual_nearby(hero_entity: &Entity, game_state: &GameState) -> Option<TilePos
         .rooms
         .iter()
         .filter(|room| room.active && room.room_type == "ritual_circle")
-        .filter(|room| manhattan_distance(hero_entity.pos, room.get_center()) <= ABILITY_SCAN_RADIUS)
+        .filter(|room| {
+            manhattan_distance(hero_entity.pos, room.get_center()) <= ABILITY_SCAN_RADIUS
+        })
         .min_by_key(|room| manhattan_distance(hero_entity.pos, room.get_center()))
         .map(|room| room.get_center())
 }

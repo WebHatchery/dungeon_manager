@@ -160,6 +160,86 @@ pub fn game_over_next_mission() -> Rect {
     )
 }
 
+/// Return button for defeat and the final victory screen.
+pub fn game_over_return_menu() -> Rect {
+    Rect::new(
+        screen_width() / 2.0 - BUTTON_WIDTH / 2.0,
+        screen_height() / 2.0 + 70.0,
+        BUTTON_WIDTH,
+        BUTTON_HEIGHT,
+    )
+}
+
+/// Shared intro panel geometry. The tutorial renderer and input layer both
+/// derive the button from the authored line count.
+pub fn intro_begin(intro_line_count: usize) -> Rect {
+    let panel_width = 640.0_f32.min(screen_width() - 40.0);
+    let panel_height = 120.0 + intro_line_count as f32 * 28.0 + 70.0;
+    let panel_y = (screen_height() - panel_height) / 2.0;
+    Rect::new(
+        screen_width() / 2.0 - (panel_width - 40.0) / 2.0,
+        panel_y + panel_height - 62.0,
+        panel_width - 40.0,
+        44.0,
+    )
+}
+
+pub struct CameraControlLayout {
+    pub up: Rect,
+    pub down: Rect,
+    pub left: Rect,
+    pub right: Rect,
+    pub rotate_left: Rect,
+    pub rotate_right: Rect,
+    pub zoom_in: Rect,
+    pub zoom_out: Rect,
+}
+
+/// Compact camera controls above the sidebar and away from the tutorial panel.
+pub fn camera_controls() -> CameraControlLayout {
+    let size = 34.0;
+    let gap = 4.0;
+    let x = screen_width() - 232.0;
+    let y = 68.0;
+    let button = |column: usize, row: usize| {
+        Rect::new(
+            x + column as f32 * (size + gap),
+            y + row as f32 * (size + gap),
+            size,
+            size,
+        )
+    };
+    CameraControlLayout {
+        up: button(1, 0),
+        down: button(1, 1),
+        left: button(0, 1),
+        right: button(2, 1),
+        rotate_left: button(3, 0),
+        rotate_right: button(4, 0),
+        zoom_out: button(3, 1),
+        zoom_in: button(4, 1),
+    }
+}
+
+pub struct TouchActionLayout {
+    pub cancel: Rect,
+    pub unmark: Rect,
+    pub slap: Rect,
+}
+
+pub fn touch_actions() -> TouchActionLayout {
+    let width = 68.0;
+    let height = 36.0;
+    let gap = 6.0;
+    let x = screen_width() - 170.0 - (width * 3.0 + gap * 2.0);
+    let y = screen_height() - 180.0 - height - 8.0;
+    TouchActionLayout {
+        cancel: Rect::new(x, y, width, height),
+        unmark: Rect::new(x + width + gap, y, width, height),
+        slap: Rect::new(x + (width + gap) * 2.0, y, width, height),
+    }
+}
+
 pub struct SettingsMenuLayout {
     pub fullscreen: Rect,
     pub ui_scale: Rect,

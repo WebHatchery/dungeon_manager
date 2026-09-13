@@ -55,7 +55,15 @@ impl InputHandler {
                     // Scenario intro overlay: freeze the game until dismissed so
                     // the player can read the story before timers start
                     if crate::engine::tutorial_system::pending_intro(state, data).is_some() {
-                        if is_mouse_button_pressed(MouseButton::Left)
+                        let begin = crate::ui::menu_layout::intro_begin(
+                            crate::engine::tutorial_system::pending_intro(state, data)
+                                .map(|intro| intro.len())
+                                .unwrap_or_default(),
+                        );
+                        let mouse = mouse_position();
+                        let begin_clicked = is_mouse_button_released(MouseButton::Left)
+                            && begin.contains(vec2(mouse.0, mouse.1));
+                        if begin_clicked
                             || is_key_pressed(KeyCode::Enter)
                             || is_key_pressed(KeyCode::Space)
                             || is_key_pressed(KeyCode::Escape)

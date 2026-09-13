@@ -6,8 +6,8 @@ use crate::state::game_state::GameState;
 use crate::ui::core::{colors, HUD_HEIGHT};
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::{
-    draw_surface_with_title, draw_text_centered_in_box, draw_ui_text, wrap_text, SurfaceStyle,
-    TextStyle,
+    button_rect_tone, draw_surface_with_title, draw_text_centered_in_box, draw_ui_text, wrap_text,
+    ButtonTone, SurfaceStyle, TextStyle,
 };
 
 const PANEL_WIDTH: f32 = 320.0;
@@ -106,13 +106,15 @@ pub fn draw_intro_overlay(state: &GameState, game_data: &GameData) -> bool {
         y += line_height;
     }
 
+    let begin = crate::ui::menu_layout::intro_begin(intro.len());
+    let _ = button_rect_tone(begin, "BEGIN MISSION", true, ButtonTone::Primary);
     draw_text_centered_in_box(
-        "Click or press Enter to begin",
+        "Tap Begin Mission or press Enter",
         rect.x,
-        rect.y + rect.h - 46.0,
+        rect.y + rect.h - 92.0,
         rect.w,
-        30.0,
-        18.0,
+        24.0,
+        16.0,
         GRAY,
     );
 

@@ -108,7 +108,11 @@ pub(super) fn handle_right_click(
 }
 
 /// Try to slap a creature at the given position, returns true if successful
-fn try_slap_creature(state: &mut GameState, game_data: &GameData, tile_pos: TilePos) -> bool {
+pub(super) fn try_slap_creature(
+    state: &mut GameState,
+    game_data: &GameData,
+    tile_pos: TilePos,
+) -> bool {
     let entity = match state.entities.at_position_mut(tile_pos).next() {
         Some(e) => e,
         None => return false,
@@ -125,6 +129,12 @@ fn try_slap_creature(state: &mut GameState, game_data: &GameData, tile_pos: Tile
     creature_ai::apply_slap(creature, monster_data, game_data, state.time_elapsed);
     eprintln!("Slapped creature {}!", creature.creature_id);
     true
+}
+
+pub(super) fn unmark_tile(state: &mut GameState, tile_pos: TilePos) {
+    if let Some(tile) = state.get_tile_mut(tile_pos) {
+        tile.marked_for_dig = false;
+    }
 }
 
 /// Handle left-click tile interactions based on current mode

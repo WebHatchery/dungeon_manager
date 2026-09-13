@@ -368,13 +368,20 @@ pub fn draw_game_over_screen(state: &GameState, game_data: Option<&GameData>) {
             true,
             ButtonTone::Positive,
         );
+    } else {
+        draw_menu_button(
+            menu_layout::game_over_return_menu(),
+            "RETURN TO MENU",
+            true,
+            ButtonTone::Warning,
+        );
     }
 
     // Instructions
     let instr = if has_next_mission {
         "Press Enter for next mission or ESC for menu"
     } else {
-        "Press ESC to Exit"
+        "Tap Return to Menu or press ESC"
     };
     let instr_dims = measure_ui_text(instr, None, 30, 1.0);
     draw_ui_text(
@@ -383,7 +390,7 @@ pub fn draw_game_over_screen(state: &GameState, game_data: Option<&GameData>) {
         if has_next_mission {
             screen_center_y + 180.0
         } else {
-            screen_center_y + 60.0
+            screen_center_y + 145.0
         },
         30.0,
         GRAY,

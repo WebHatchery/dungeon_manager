@@ -6,7 +6,7 @@ use crate::state::{DragSelection, GamePhase, InteractionMode, MapType};
 use crate::ui::resources::GraphicsCache;
 use crate::ui::sidebar::Sidebar;
 use macroquad::prelude::*;
-use macroquad_toolkit::ui::{draw_surface, draw_ui_text, SurfaceStyle};
+use macroquad_toolkit::ui::{button_rect_tone, draw_surface, draw_ui_text, ButtonTone, SurfaceStyle};
 
 mod tiles;
 
@@ -345,6 +345,10 @@ impl GameRenderer {
             );
         }
 
+        if !state.paused && !state.game_over {
+            draw_game_controls();
+        }
+
         // Draw notifications
         crate::ui::notifications::draw_notifications(state);
 
@@ -460,5 +464,30 @@ impl GameRenderer {
                 draw_sphere(vec3(x, 0.5, z), 0.15, None, color);
             }
         }
+    }
+}
+
+fn draw_game_controls() {
+    let camera = crate::ui::menu_layout::camera_controls();
+    for (rect, label) in [
+        (camera.up, "UP"),
+        (camera.down, "DOWN"),
+        (camera.left, "LEFT"),
+        (camera.right, "RIGHT"),
+        (camera.rotate_left, "ROT-") ,
+        (camera.rotate_right, "ROT+"),
+        (camera.zoom_out, "-"),
+        (camera.zoom_in, "+"),
+    ] {
+        let _ = button_rect_tone(rect, label, true, ButtonTone::Secondary);
+    }
+
+    let actions = crate::ui::menu_layout::touch_actions();
+    for (rect, label, tone) in [
+        (actions.cancel, "CANCEL", ButtonTone::Warning),
+        (actions.unmark, "UNMARK", ButtonTone::Secondary),
+        (actions.slap, "SLAP", ButtonTone::Danger),
+    ] {
+        let _ = button_rect_tone(rect, label, true, tone);
     }
 }

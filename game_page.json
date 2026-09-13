@@ -10,20 +10,20 @@
   ],
   "controls": [
     {
-      "key": "WASD",
-      "desc": "Pan Camera"
+      "key": "Touch",
+      "desc": "Use visible camera, action, sidebar, and tile controls"
     },
     {
-      "key": "Mouse",
-      "desc": "Select & Build"
+      "key": "WASD / Q / E",
+      "desc": "Pan and rotate camera"
     },
     {
-      "key": "Scroll",
-      "desc": "Zoom"
+      "key": "Mouse / Scroll",
+      "desc": "Select, build, and zoom"
     },
     {
-      "key": "Space",
-      "desc": "Pause"
+      "key": "Space / Escape",
+      "desc": "Pause or leave a finished mission"
     }
   ],
   "details": [

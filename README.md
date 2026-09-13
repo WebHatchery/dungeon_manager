@@ -15,14 +15,15 @@ You do not directly control every minion. You shape the dungeon, provide what cr
 
 ## Goal
 
-Keep the dungeon heart alive while growing a self-sustaining underground empire. The current focus is sandbox survival and dungeon growth.
+Keep the dungeon heart alive while growing a self-sustaining underground empire across the Deep Dominion campaign.
 
 ## Controls
 
-- WASD: pan the camera.
-- Mouse: select and build.
-- Scroll: zoom.
-- Space: pause.
+- Tap the visible camera buttons to pan, rotate, and zoom; WASD/Q/E and the scroll wheel are keyboard/mouse shortcuts.
+- Tap the sidebar to select build, magic, minion, trap, and research actions, then tap a tile to apply them.
+- Tap Cancel, Unmark, or Slap above the sidebar for the common right-click actions.
+- Tap Begin Mission on the intro and Return to Menu after a defeat or final victory.
+- Space or Escape pauses; the pause menu also exposes Save, Load, and Main Menu.
 
 ## Current Scope
 
@@ -35,4 +36,3 @@ In-development dungeon management with digging, rooms, creatures, needs, resourc
 - `docs/ROOM_SET.md` — the commercial room set scoping decision.
 - `docs/monsters.md` — monster roster reference, including designs not yet built.
 - `TODO.md` — everything still open.
-

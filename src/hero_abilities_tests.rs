@@ -109,7 +109,11 @@ fn in_room_ability_only_fires_in_matching_room_type() {
     // Keep the unrelated opening-strike trigger from changing this room-only
     // test; the ability system uses the live damage timestamp as its stealth
     // signal.
-    game_state.entities.get_mut(hero_id).unwrap().last_damage_time = 0.0;
+    game_state
+        .entities
+        .get_mut(hero_id)
+        .unwrap()
+        .last_damage_time = 0.0;
 
     let mut creature = CreatureState::new("goblin".to_string(), 1, 100.0, 10.0, 2);
     creature.health = 100.0;
@@ -214,8 +218,8 @@ fn authored_environment_and_stealth_triggers_fire() {
         wizard_pos,
         HeroState::new("wizard".to_string(), 1, 100.0, 10.0, wizard_pos, 1.0, 1),
     );
-    game_state.dungeon.get_tile_mut(wizard_pos).unwrap().trap = Some(
-        crate::state::tile_state::TrapState {
+    game_state.dungeon.get_tile_mut(wizard_pos).unwrap().trap =
+        Some(crate::state::tile_state::TrapState {
             trap_type: "spike_trap".to_string(),
             constructed: true,
             construction_progress: 1.0,
@@ -223,10 +227,14 @@ fn authored_environment_and_stealth_triggers_fire() {
             funded: true,
             cooldown: 0.0,
             triggered: false,
-        },
-    );
+        });
     update_hero_abilities(&mut game_state, &game_data, 1.0);
-    let wizard = game_state.entities.get(wizard_id).unwrap().as_hero().unwrap();
+    let wizard = game_state
+        .entities
+        .get(wizard_id)
+        .unwrap()
+        .as_hero()
+        .unwrap();
     assert!(wizard.ability_cooldowns.contains_key("teleport"));
     assert!(wizard.movement_speed > 1.5);
 
@@ -243,8 +251,11 @@ fn authored_environment_and_stealth_triggers_fire() {
             2,
         ),
     );
-    game_state.dungeon.get_tile_mut(cleric_pos).unwrap().tile_type =
-        "corrupted_floor".to_string();
+    game_state
+        .dungeon
+        .get_tile_mut(cleric_pos)
+        .unwrap()
+        .tile_type = "corrupted_floor".to_string();
     update_hero_abilities(&mut game_state, &game_data, 1.0);
     assert!(game_state
         .entities
@@ -274,12 +285,14 @@ fn authored_environment_and_stealth_triggers_fire() {
         .unwrap()
         .ability_cooldowns
         .contains_key("backstab"));
-    assert!(game_state
-        .entities
-        .get(creature_id)
-        .unwrap()
-        .as_creature()
-        .unwrap()
-        .health
-        < 100.0);
+    assert!(
+        game_state
+            .entities
+            .get(creature_id)
+            .unwrap()
+            .as_creature()
+            .unwrap()
+            .health
+            < 100.0
+    );
 }

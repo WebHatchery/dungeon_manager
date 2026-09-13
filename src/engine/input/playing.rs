@@ -101,6 +101,15 @@ pub(super) fn handle_playing(
         if is_key_pressed(KeyCode::Escape) {
             return true; // Return to Main Menu
         }
+        if !state.victory || !state.has_pending_campaign_mission(game_data) {
+            let rect = crate::ui::menu_layout::game_over_return_menu();
+            let mouse = mouse_position();
+            if is_mouse_button_released(MouseButton::Left)
+                && rect.contains(vec2(mouse.0, mouse.1))
+            {
+                return true;
+            }
+        }
         return false; // Block other input
     }
 
@@ -196,8 +205,41 @@ pub(super) fn handle_playing(
         drag_selection.cancel(); // Cancel any active drag when mode changes
     }
 
-    // Check if mouse is over UI
-    let mouse_over_ui = sidebar.is_mouse_over();
+    // Check if mouse is over UI. The camera and action controls are part of
+    // the game canvas rather than the sidebar, but still must not leak a tap
+    // through to a tile interaction underneath them.
+    let mouse = mouse_position();
+    let point = vec2(mouse.0, mouse.1);
+    let camera_controls = crate::ui::menu_layout::camera_controls();
+    let touch_actions = crate::ui::menu_layout::touch_actions();
+    let mouse_over_ui = sidebar.is_mouse_over()
+        || [
+            camera_controls.up,
+            camera_controls.down,
+            camera_controls.left,
+            camera_controls.right,
+            camera_controls.rotate_left,
+            camera_controls.rotate_right,
+            camera_controls.zoom_in,
+            camera_controls.zoom_out,
+            touch_actions.cancel,
+            touch_actions.unmark,
+            touch_actions.slap,
+        ]
+        .iter()
+        .any(|rect| rect.contains(point));
+
+    if handle_touch_actions(
+        state,
+        game_data,
+        interaction_mode,
+        sidebar,
+        tile_pos,
+        &touch_actions,
+        drag_selection,
+    ) {
+        return false;
+    }
 
     // Handle spell casting
     tile_actions::handle_spell_casting(state, game_data, sidebar, tile_pos, mouse_over_ui);
@@ -263,6 +305,37 @@ pub(super) fn handle_playing(
     false
 }
 
+fn handle_touch_actions(
+    state: &mut GameState,
+    game_data: &GameData,
+    interaction_mode: &mut InteractionMode,
+    sidebar: &mut Sidebar,
+    tile_pos: TilePos,
+    controls: &crate::ui::menu_layout::TouchActionLayout,
+    drag_selection: &mut DragSelection,
+) -> bool {
+    if !is_mouse_button_released(MouseButton::Left) {
+        return false;
+    }
+    let mouse = mouse_position();
+    let point = vec2(mouse.0, mouse.1);
+    if controls.cancel.contains(point) {
+        *interaction_mode = InteractionMode::None;
+        sidebar.clear_selection();
+        drag_selection.cancel();
+        return true;
+    }
+    if controls.unmark.contains(point) {
+        tile_actions::unmark_tile(state, tile_pos);
+        return true;
+    }
+    if controls.slap.contains(point) {
+        tile_actions::try_slap_creature(state, game_data, tile_pos);
+        return true;
+    }
+    false
+}
+
 /// Handle WASD camera movement, Q/E rotation, and scroll zoom
 fn handle_camera_controls(dt: f32, state: &mut GameState) {
     let camera_speed = 30.0 * dt;
@@ -303,6 +376,38 @@ fn handle_camera_controls(dt: f32, state: &mut GameState) {
         state.camera.zoom_in();
     } else if scroll < 0.0 {
         state.camera.zoom_out();
+    }
+
+    let controls = crate::ui::menu_layout::camera_controls();
+    let mouse = mouse_position();
+    let point = vec2(mouse.0, mouse.1);
+    if is_mouse_button_down(MouseButton::Left) {
+        if controls.up.contains(point) {
+            state.camera.target.2 -= camera_speed;
+        }
+        if controls.down.contains(point) {
+            state.camera.target.2 += camera_speed;
+        }
+        if controls.left.contains(point) {
+            state.camera.target.0 -= camera_speed;
+        }
+        if controls.right.contains(point) {
+            state.camera.target.0 += camera_speed;
+        }
+    }
+    if is_mouse_button_released(MouseButton::Left) {
+        if controls.rotate_left.contains(point) {
+            state.camera.angle -= std::f32::consts::FRAC_PI_4;
+        }
+        if controls.rotate_right.contains(point) {
+            state.camera.angle += std::f32::consts::FRAC_PI_4;
+        }
+        if controls.zoom_out.contains(point) {
+            state.camera.zoom_out();
+        }
+        if controls.zoom_in.contains(point) {
+            state.camera.zoom_in();
+        }
     }
 }
 
