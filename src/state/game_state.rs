@@ -662,6 +662,10 @@ impl GameState {
             ));
         }
 
+        // Hazards remain dangerous even when scripted or forced movement puts
+        // an entity on terrain that ordinary pathfinding avoids.
+        crate::engine::terrain_hazards::apply_terrain_damage(self, game_data, dt);
+
         // Update creature count (only player creatures, excluding imps and wild monsters)
         self.player.current_creature_count =
             self.count_player_creatures(game_data) - self.count_imps();

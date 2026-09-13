@@ -142,6 +142,7 @@ mod trap_tending {
                 funded: true,
                 constructed: true,
                 active: true,
+                locked: false,
                 triggered: false,
                 cooldown: 0.0,
                 construction_progress: 10.0,

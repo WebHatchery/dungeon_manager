@@ -19,6 +19,7 @@ pub mod lighting;
 pub mod map_generator;
 pub mod spell_effects;
 pub mod task_system;
+pub mod terrain_hazards;
 pub mod tile_aura;
 pub mod tile_types;
 pub mod trap_system;

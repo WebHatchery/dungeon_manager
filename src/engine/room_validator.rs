@@ -220,7 +220,7 @@ fn is_perimeter_secured(pos: TilePos, grid: &Grid, game_data: &GameData) -> bool
 
     // Check for constructed objects that block movement (like doors)
     if let Some(trap) = &tile.trap {
-        if trap.constructed {
+        if trap.constructed && trap.locked {
             if let Some(trap_data) = game_data.traps.get(&trap.trap_type) {
                 if trap_data.effects.blocks_movement {
                     return true;

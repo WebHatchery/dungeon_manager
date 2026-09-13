@@ -6,6 +6,7 @@ use crate::state::dungeon::Dungeon;
 use crate::state::entities::{EntityId, EntityManager, EntityType};
 use crate::state::player_state::PlayerState;
 use crate::state::tile_state::TilePos;
+use crate::state::OwnerId;
 use std::collections::HashSet;
 
 /// Get the material cost for a trap type from game data
@@ -24,6 +25,26 @@ pub fn get_trap_build_time(trap_type: &str, game_data: &GameData) -> f32 {
         .get(trap_type)
         .map(|data| data.build_time)
         .unwrap_or(5.0) // Default fallback
+}
+
+/// Toggle a constructed lockable door at `pos` and return its new state.
+///
+/// Door locking is deliberately a tile action: the same function serves a
+/// mouse tap and the right-click shortcut, and an unlocked door immediately
+/// becomes traversable because `tile_types::is_tile_walkable` reads `locked`.
+pub fn toggle_door_lock_at(
+    dungeon: &mut Dungeon,
+    game_data: &GameData,
+    pos: TilePos,
+) -> Option<bool> {
+    let tile = dungeon.get_tile_mut(pos)?;
+    let trap = tile.trap.as_mut()?;
+    let trap_data = game_data.traps.get(&trap.trap_type)?;
+    if !trap.constructed || !trap_data.effects.lockable {
+        return None;
+    }
+    trap.locked = !trap.locked;
+    Some(trap.locked)
 }
 
 /// Process trap construction progress
@@ -101,6 +122,11 @@ fn progress_trap_construction(
     if trap.construction_progress >= build_time {
         trap.constructed = true;
         trap.active = true;
+        trap.locked = game_data
+            .traps
+            .get(&trap.trap_type)
+            .map(|data| data.effects.lockable)
+            .unwrap_or(false);
         trace_log!("traps", "Trap construction complete at {:?}", pos);
         return true;
     }
@@ -124,6 +150,7 @@ pub fn process_trap_triggers(
     dt: f32,
 ) -> Vec<TrapTriggerResult> {
     update_trap_cooldowns(dungeon, dt);
+    rearm_triggered_traps(dungeon, entities, game_data);
 
     let hero_positions: Vec<(EntityId, TilePos)> = entities
         .heroes()
@@ -247,7 +274,9 @@ fn trigger_trap(
     // families.
     let effects = &trap_data.effects;
 
-    if effects.blocks_movement {
+    if effects.blocks_movement && dungeon.get_tile(pos).is_some_and(|tile| {
+        tile.trap.as_ref().is_some_and(|trap| trap.locked)
+    }) {
         // Doors bar the way; they have nothing to fire.
         return None;
     }
@@ -349,7 +378,11 @@ fn trigger_area_trap(
         damage,
         affected_entities.len()
     );
-    set_trap_disabled(dungeon, pos);
+    set_trap_disabled(
+        dungeon,
+        pos,
+        trap_data.effects.cooldown.unwrap_or(5.0),
+    );
 
     Some(TrapTriggerResult {
         trap_type: "boulder_trap".to_string(),
@@ -360,23 +393,37 @@ fn trigger_area_trap(
 fn trigger_alarm_trap(
     pos: TilePos,
     trap_data: &crate::data::traps::TrapData,
-    entities: &EntityManager,
+    entities: &mut EntityManager,
     dungeon: &mut Dungeon,
     game_data: &GameData,
 ) {
     let alert_radius = trap_data.effects.alert_radius;
 
-    let alerted_count = entities
+    let alerted_ids: Vec<EntityId> = entities
         .creatures()
-        .filter_map(|(id, _)| entities.get(id).map(|e| e.pos))
-        .filter(|e_pos| pos.distance_to(e_pos) <= alert_radius)
-        .count();
+        .filter_map(|(id, creature)| {
+            let entity = entities.get(id)?;
+            (entity.owner == OwnerId::Player
+                && creature.creature_id != "imp"
+                && pos.distance_to(&entity.pos) <= alert_radius)
+            .then_some(id)
+        })
+        .collect();
+
+    for entity_id in &alerted_ids {
+        if let Some(entity) = entities.get_mut(*entity_id) {
+            if let Some(creature) = entity.as_creature_mut() {
+                creature.current_task = Some(crate::state::entities::Task::MoveTo(pos));
+                creature.current_path = None;
+            }
+        }
+    }
 
     trace_log!(
         "traps",
         "Alarm trap triggered at {:?}! Alerted {} creatures.",
         pos,
-        alerted_count
+        alerted_ids.len()
     );
     let cooldown = game_data.config.traps.default_cooldown;
     let cooldown_multiplier = trap_data.effects.cooldown_multiplier.unwrap_or(2.0);
@@ -391,11 +438,57 @@ fn set_trap_cooldown(dungeon: &mut Dungeon, pos: TilePos, cooldown: f32) {
     }
 }
 
-fn set_trap_disabled(dungeon: &mut Dungeon, pos: TilePos) {
+fn set_trap_disabled(dungeon: &mut Dungeon, pos: TilePos, cooldown: f32) {
     if let Some(tile) = dungeon.get_tile_mut(pos) {
         if let Some(trap) = tile.trap.as_mut() {
             trap.triggered = true;
             trap.active = false;
+            trap.cooldown = cooldown;
+        }
+    }
+}
+
+/// Imps can restore a spent area trap once its cooldown has elapsed.
+fn rearm_triggered_traps(
+    dungeon: &mut Dungeon,
+    entities: &EntityManager,
+    game_data: &GameData,
+) {
+    let imp_positions: Vec<TilePos> = entities
+        .creatures()
+        .filter_map(|(id, creature)| {
+            let entity = entities.get(id)?;
+            (entity.owner == OwnerId::Player && creature.creature_id == "imp").then_some(entity.pos)
+        })
+        .collect();
+    if imp_positions.is_empty() {
+        return;
+    }
+
+    for y in 0..dungeon.height {
+        for x in 0..dungeon.width {
+            let pos = TilePos::new(x as i32, y as i32);
+            let Some(tile) = dungeon.get_tile_mut(pos) else {
+                continue;
+            };
+            let Some(trap) = tile.trap.as_mut() else {
+                continue;
+            };
+            let Some(data) = game_data.traps.get(&trap.trap_type) else {
+                continue;
+            };
+            if !trap.triggered
+                || trap.cooldown > 0.0
+                || !data.effects.area
+                || !imp_positions
+                    .iter()
+                    .any(|imp_pos| pos.distance_to(imp_pos) <= 1.5)
+            {
+                continue;
+            }
+            trap.triggered = false;
+            trap.active = true;
+            trace_log!("traps", "Imp rearmed {} at {:?}.", trap.trap_type, pos);
         }
     }
 }
@@ -429,5 +522,70 @@ fn apply_trap_damage(entity: &mut crate::state::entities::Entity, damage: f32) {
             // Structures don't take trap damage
         }
         EntityType::ResourcePile(_) => {} // Piles don't take trap damage
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::entities::CreatureState;
+    use crate::state::game_state::GameState;
+    use crate::state::OwnerId;
+
+    #[test]
+    fn an_imp_rearms_a_spent_area_trap() {
+        let game_data = GameData::load().expect("game data should load");
+        let mut state = GameState::new(20, 20, &game_data);
+        let pos = TilePos::new(4, 4);
+        state.dungeon.get_tile_mut(pos).unwrap().trap = Some(crate::state::tile_state::TrapState {
+            trap_type: "boulder_trap".to_string(),
+            constructed: true,
+            construction_progress: 1.0,
+            active: false,
+            locked: false,
+            funded: true,
+            cooldown: 0.0,
+            triggered: true,
+        });
+        state.entities.spawn_creature_for_owner(
+            pos,
+            CreatureState::new("imp".to_string(), 1, 10.0, 0.0, 1),
+            OwnerId::Player,
+        );
+
+        rearm_triggered_traps(&mut state.dungeon, &state.entities, &game_data);
+        let trap = state.dungeon.get_tile(pos).unwrap().trap.as_ref().unwrap();
+        assert!(trap.active);
+        assert!(!trap.triggered);
+    }
+
+    #[test]
+    fn an_alarm_sends_nearby_creatures_to_the_alarm_tile() {
+        let game_data = GameData::load().expect("game data should load");
+        let mut state = GameState::new(20, 20, &game_data);
+        let pos = TilePos::new(4, 4);
+        let creature_id = state.entities.spawn_creature(
+            TilePos::new(5, 4),
+            CreatureState::new("goblin".to_string(), 1, 20.0, 0.0, 1),
+        );
+
+        trigger_alarm_trap(
+            pos,
+            &game_data.traps["alarm_trap"],
+            &mut state.entities,
+            &mut state.dungeon,
+            &game_data,
+        );
+
+        assert_eq!(
+            state
+                .entities
+                .get(creature_id)
+                .unwrap()
+                .as_creature()
+                .unwrap()
+                .current_task,
+            Some(crate::state::entities::Task::MoveTo(pos))
+        );
     }
 }

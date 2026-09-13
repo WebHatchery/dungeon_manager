@@ -65,3 +65,48 @@ fn trap_placement_consumes_manufactured_inventory() {
     assert_eq!(state.player.trap_inventory_count("spike_trap"), 0);
     assert!(state.pending_trap_builds.contains(&trap_pos));
 }
+
+#[test]
+fn lockable_doors_can_be_opened_and_closed_by_tile_action() {
+    let game_data = GameData::load().expect("game data should load");
+    let mut state = GameState::new_for_scenario(&game_data, "dark_beginnings");
+    let door_pos = TilePos::new(2, 2);
+    let tile = state.get_tile_mut(door_pos).unwrap();
+    tile.tile_type = tt::CLAIMED_FLOOR.to_string();
+    tile.claim();
+    tile.trap = Some(crate::state::tile_state::TrapState {
+        trap_type: "magic_door".to_string(),
+        constructed: true,
+        construction_progress: 12.0,
+        active: true,
+        locked: true,
+        funded: true,
+        cooldown: 0.0,
+        triggered: false,
+    });
+
+    assert_eq!(
+        crate::engine::trap_system::toggle_door_lock_at(
+            &mut state.dungeon,
+            &game_data,
+            door_pos,
+        ),
+        Some(false)
+    );
+    assert!(crate::engine::tile_types::is_tile_walkable(
+        state.get_tile(door_pos).unwrap(),
+        &game_data
+    ));
+    assert_eq!(
+        crate::engine::trap_system::toggle_door_lock_at(
+            &mut state.dungeon,
+            &game_data,
+            door_pos,
+        ),
+        Some(true)
+    );
+    assert!(!crate::engine::tile_types::is_tile_walkable(
+        state.get_tile(door_pos).unwrap(),
+        &game_data
+    ));
+}

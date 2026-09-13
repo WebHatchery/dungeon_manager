@@ -44,14 +44,12 @@ const UNCONSUMED: &[&str] = &[
     "RoomVisualData::wall_sprite",
     // Lighting and atmosphere pass.
     "LightEffect::flicker",
-    // Tiles: dig cost comes from config, and lava blocks movement so nothing
-    // can stand in it to take `damage_per_second`. Fog art is not generated.
+    // Tiles: durability and fog art are still presentation/authoring hooks.
     "TileData::durability",
-    "TileData::damage_per_second",
     "VisualData::fogged_sprite",
     "VisualData::animated",
-    // Traps: magical door locking is unbuilt, and every trap is "pressure".
-    "TrapEffects::lockable",
+    // Traps: every shipped trigger is pressure, so the trigger vocabulary is
+    // reserved until a second trigger semantics exists.
     "TrapEffects::trigger_type",
     // Hero behaviour model, the part still unreachable. `trap_awareness`,
     // `fear_resistance`, `will_fight_to_death`, `bravery` and now

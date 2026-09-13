@@ -57,6 +57,10 @@ pub struct TrapState {
     pub constructed: bool,
     pub construction_progress: f32,
     pub active: bool,
+    /// For lockable doors, whether the blocking state is engaged.
+    /// Old saves default to locked to preserve pre-locking door behavior.
+    #[serde(default = "default_locked")]
+    pub locked: bool,
     pub funded: bool,
     /// Cooldown timer - trap cannot trigger while > 0
     #[serde(default)]
@@ -64,6 +68,10 @@ pub struct TrapState {
     /// Whether the trap has been triggered (for single-use traps)
     #[serde(default)]
     pub triggered: bool,
+}
+
+fn default_locked() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

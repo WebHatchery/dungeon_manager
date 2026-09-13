@@ -224,6 +224,7 @@ fn authored_environment_and_stealth_triggers_fire() {
             constructed: true,
             construction_progress: 1.0,
             active: true,
+            locked: false,
             funded: true,
             cooldown: 0.0,
             triggered: false,

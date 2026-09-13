@@ -75,6 +75,7 @@ pub fn is_tile_walkable(tile: &TileState, game_data: &GameData) -> bool {
     if let Some(trap) = &tile.trap {
         if trap.constructed
             && trap.active
+            && trap.locked
             && game_data
                 .traps
                 .get(&trap.trap_type)

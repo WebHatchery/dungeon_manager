@@ -95,7 +95,17 @@ pub(super) fn handle_right_click(
             }
         }
         InteractionMode::None => {
-            if !try_slap_creature(state, game_data, tile_pos) {
+            if let Some(locked) = crate::engine::trap_system::toggle_door_lock_at(
+                &mut state.dungeon,
+                game_data,
+                tile_pos,
+            ) {
+                state.notifications.info(if locked {
+                    "Door locked."
+                } else {
+                    "Door unlocked."
+                });
+            } else if !try_slap_creature(state, game_data, tile_pos) {
                 *selected_entity = None;
                 sidebar.clear_selection();
             }
@@ -195,6 +205,18 @@ pub(super) fn handle_tile_interaction(
             );
         }
         InteractionMode::None => {
+            if let Some(locked) = crate::engine::trap_system::toggle_door_lock_at(
+                &mut state.dungeon,
+                game_data,
+                tile_pos,
+            ) {
+                state.notifications.info(if locked {
+                    "Door locked."
+                } else {
+                    "Door unlocked."
+                });
+                return;
+            }
             let found = crate::engine::input_handlers::select_entity_or_room(
                 state,
                 selected_entity,
