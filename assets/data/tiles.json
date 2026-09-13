@@ -160,6 +160,7 @@
     "blocks_vision": false,
     "supports_rooms": false,
     "resources": null,
+    "speed_modifier": 0.65,
     "durability": null,
     "visual": {
       "sprite": "tiles/water.png",

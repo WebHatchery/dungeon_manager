@@ -1,4 +1,6 @@
 use crate::state::entities::{EntityId, EntityManager};
+use crate::state::dungeon::Dungeon;
+use crate::data::GameData;
 use crate::state::tile_state::TilePos;
 
 /// Shared movement logic for entities following a path/timer system.
@@ -9,6 +11,8 @@ use crate::state::tile_state::TilePos;
 pub fn process_entity_movement(
     entities: &mut EntityManager,
     entity_id: EntityId,
+    dungeon: &Dungeon,
+    game_data: &GameData,
     dt: f32,
     speed_multiplier: f32,
 ) -> Option<TilePos> {
@@ -27,6 +31,10 @@ pub fn process_entity_movement(
     };
 
     let (current_path, move_timer, movement_speed) = movement_data?;
+    let terrain_multiplier = entities
+        .get(entity_id)
+        .map(|entity| terrain_speed_multiplier(entity.pos, dungeon, game_data))
+        .unwrap_or(1.0);
 
     let mut should_move = false;
     let mut next_waypoint = None;
@@ -35,7 +43,8 @@ pub fn process_entity_movement(
     if let Some(path) = current_path {
         if !path.is_empty() {
             new_move_timer += dt;
-            let move_interval = 1.0 / (movement_speed * speed_multiplier).max(0.01);
+            let move_interval =
+                1.0 / (movement_speed * speed_multiplier * terrain_multiplier).max(0.01);
 
             if new_move_timer >= move_interval {
                 new_move_timer = 0.0;
@@ -91,4 +100,16 @@ pub fn process_entity_movement(
     }
 
     None
+}
+
+/// Resolve the authored movement effect of the tile an entity currently
+/// occupies. Blocking hazards still normally prevent pathing, but scripted
+/// movement and a newly changed tile can leave an entity standing on one.
+pub fn terrain_speed_multiplier(pos: TilePos, dungeon: &Dungeon, game_data: &GameData) -> f32 {
+    dungeon
+        .get_tile(pos)
+        .and_then(|tile| game_data.tiles.get(&tile.tile_type))
+        .and_then(|tile| tile.speed_modifier)
+        .unwrap_or(1.0)
+        .max(0.05)
 }

@@ -2289,6 +2289,7 @@
     },
     "economy": {
       "wage_per_minute": 15,
+      "mana_upkeep_per_minute": 12.0,
       "steals_if_unpaid": true,
       "drops_gold_on_death": [
         200,
@@ -2888,6 +2889,7 @@
     },
     "economy": {
       "wage_per_minute": 0,
+      "mana_upkeep_per_minute": 1.0,
       "steals_if_unpaid": false,
       "drops_gold_on_death": [
         0,

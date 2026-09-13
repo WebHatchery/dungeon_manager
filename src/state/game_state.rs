@@ -353,6 +353,16 @@ impl GameState {
             dt,
         );
 
+        // Bound high-tier creatures draw from the same authored mana pool that
+        // powers spells and rooms. The data field keeps this rule extensible to
+        // future creatures without another species branch here.
+        crate::engine::mana_upkeep::apply_mana_upkeep(
+            &mut self.entities,
+            &mut self.player,
+            game_data,
+            dt,
+        );
+
         // Drain anything the engine layers wanted the player to know. They
         // hold `&mut PlayerState` but not the notification manager, so this is
         // their only route to the screen.
@@ -510,6 +520,8 @@ impl GameState {
                 crate::engine::movement::process_entity_movement(
                     &mut self.entities,
                     hero_id,
+                    &self.dungeon,
+                    game_data,
                     dt,
                     self.hero_base.hero_speed_multiplier(),
                 );

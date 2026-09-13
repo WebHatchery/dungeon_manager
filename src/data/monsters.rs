@@ -76,6 +76,11 @@ pub struct MutationData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EconomyData {
     pub wage_per_minute: i32,
+    /// Mana drawn from the dungeon per minute while this creature is alive.
+    /// Most creatures leave this at zero; expensive bound beings author it
+    /// explicitly instead of relying on an engine-side species check.
+    #[serde(default)]
+    pub mana_upkeep_per_minute: f32,
     pub steals_if_unpaid: bool,
     pub drops_gold_on_death: [i32; 2],
 }
