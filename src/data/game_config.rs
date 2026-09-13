@@ -247,8 +247,7 @@ pub struct StatusEffectsConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AbilityEffectData {
-    /// One of "poison", "burn", "freeze", "stun" (see `state::entities::StatusEffect` and
-    /// `engine::combat::update_status_effects` for what each type actually does).
+    /// One of "poison", "burn", "freeze", "stun", "charm", "speed_modifier", or "none".
     pub status_type: String,
     pub duration: f32,
     /// Poison/burn: damage per second. Freeze: movement speed multiplier while active
@@ -256,6 +255,20 @@ pub struct AbilityEffectData {
     pub strength: f32,
     /// Chance in [0.0, 1.0] to proc on a landed hit.
     pub proc_chance: f32,
+    /// Optional deterministic attack multiplier for an authored combat ability.
+    #[serde(default)]
+    pub damage_multiplier: Option<f32>,
+    /// Optional deterministic attack-speed multiplier for an authored combat ability.
+    #[serde(default)]
+    pub attack_speed_multiplier: Option<f32>,
+    /// If present, the deterministic multipliers only apply at or below this
+    /// fraction of the attacker's maximum health.
+    #[serde(default)]
+    pub health_threshold: Option<f32>,
+    /// Status effects such as a charge buff may belong to the attacker rather
+    /// than the defender they hit.
+    #[serde(default)]
+    pub applies_to_attacker: bool,
 }
 
 pub fn load_game_config() -> Result<GameConfig, Box<dyn Error>> {

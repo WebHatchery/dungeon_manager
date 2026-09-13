@@ -75,13 +75,14 @@ impl GameState {
                 );
 
                 if let Some((projectile_type, damage)) = result.projectile_spawned.clone() {
-                    self.projectiles.spawn(
+                    self.projectiles.spawn_with_status(
                         attacker_visual_pos,
                         defender_visual_pos,
                         &projectile_type,
                         attacker_id,
                         target_id,
                         damage,
+                        result.status_applied.clone(),
                     );
                 } else if result.damage_dealt > 0.0 {
                     self.projectiles.spawn(

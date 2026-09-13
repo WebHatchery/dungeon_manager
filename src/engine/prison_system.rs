@@ -116,17 +116,17 @@ pub fn progress_prison_conversions(
             }
         }
 
-        if completed {
-            if complete_conversion(
+        if completed
+            && complete_conversion(
                 hero_id,
                 kind,
                 entities,
                 notifications,
                 game_data,
                 &hero_name,
-            ) {
-                completed_count += 1;
-            }
+            )
+        {
+            completed_count += 1;
         }
     }
     completed_count

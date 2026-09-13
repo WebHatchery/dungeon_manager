@@ -6,6 +6,7 @@
 //! melee travel ratio) and the impact payload.
 
 use crate::state::entities::EntityId;
+use crate::state::entities::StatusEffect;
 use crate::state::tile_state::TilePos;
 use macroquad::prelude::vec2;
 use macroquad_toolkit::fx::{ProjectileLayer, TravelingProjectile};
@@ -71,6 +72,9 @@ pub struct ProjectilePayload {
     pub defender_id: EntityId,
     /// Damage to deal on impact
     pub damage: f32,
+    /// Status effects rolled when the attack was launched and delivered on impact.
+    #[serde(default)]
+    pub status_effects: Vec<StatusEffect>,
 }
 
 /// A projectile in flight
@@ -81,6 +85,7 @@ pub struct Impact {
     pub attacker_id: EntityId,
     pub defender_id: EntityId,
     pub damage: f32,
+    pub status_effects: Vec<StatusEffect>,
 }
 
 /// Manager for all active projectiles
@@ -129,6 +134,27 @@ impl ProjectileManager {
         defender_id: EntityId,
         damage: f32,
     ) {
+        self.spawn_with_status(
+            start_pos,
+            end_pos,
+            attack_type,
+            attacker_id,
+            defender_id,
+            damage,
+            Vec::new(),
+        );
+    }
+
+    pub fn spawn_with_status(
+        &mut self,
+        start_pos: (f32, f32),
+        end_pos: (f32, f32),
+        attack_type: &str,
+        attacker_id: EntityId,
+        defender_id: EntityId,
+        damage: f32,
+        status_effects: Vec<StatusEffect>,
+    ) {
         let projectile_type = ProjectileType::from_attack_type(attack_type);
         let duration = projectile_type.duration();
         let travel_ratio = projectile_type.travel_ratio();
@@ -137,6 +163,7 @@ impl ProjectileManager {
             attacker_id,
             defender_id,
             damage,
+            status_effects,
         };
         self.layer.push(
             TravelingProjectile::new(
@@ -179,6 +206,7 @@ impl ProjectileManager {
                 attacker_id: payload.attacker_id,
                 defender_id: payload.defender_id,
                 damage: payload.damage,
+                status_effects: payload.status_effects,
             })
             .collect()
     }

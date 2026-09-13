@@ -176,6 +176,35 @@
         "duration": 6.0,
         "strength": 0.25,
         "proc_chance": 0.5
+      },
+      "charge": {
+        "status_type": "none",
+        "duration": 0.0,
+        "strength": 0.0,
+        "proc_chance": 1.0,
+        "damage_multiplier": 1.5
+      },
+      "smash": {
+        "status_type": "stun",
+        "duration": 1.0,
+        "strength": 0.0,
+        "proc_chance": 1.0,
+        "damage_multiplier": 1.25
+      },
+      "berserk": {
+        "status_type": "none",
+        "duration": 0.0,
+        "strength": 0.0,
+        "proc_chance": 1.0,
+        "damage_multiplier": 1.35,
+        "attack_speed_multiplier": 1.35,
+        "health_threshold": 0.5
+      },
+      "charm": {
+        "status_type": "charm",
+        "duration": 4.0,
+        "strength": 0.0,
+        "proc_chance": 1.0
       }
     }
   }

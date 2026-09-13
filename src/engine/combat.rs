@@ -20,6 +20,7 @@ use std::collections::HashMap;
 pub struct CombatResult {
     pub damage_dealt: f32,
     pub status_applied: Vec<StatusEffect>,
+    pub attacker_status_applied: Vec<StatusEffect>,
     pub defender_died: bool,
     pub projectile_spawned: Option<(String, f32)>, // (type, damage)
 }
@@ -56,6 +57,7 @@ pub fn resolve_combat_tick(
         return CombatResult {
             damage_dealt: 0.0,
             status_applied: Vec::new(),
+            attacker_status_applied: Vec::new(),
             defender_died: false,
             projectile_spawned: None,
         };
@@ -90,6 +92,7 @@ pub fn resolve_combat_tick(
         return CombatResult {
             damage_dealt: 0.0,
             status_applied: Vec::new(),
+            attacker_status_applied: Vec::new(),
             defender_died: false,
             projectile_spawned: None,
         };
@@ -97,6 +100,8 @@ pub fn resolve_combat_tick(
 
     // Calculate damage
     let base_damage = calculate_damage(&attacker_stats, &defender_stats, game_data);
+    let (status_effects, attacker_status_effects) =
+        generate_status_effects(&attacker_stats.abilities, game_data);
     let actual_damage = base_damage.max(0.0);
 
     // Determine if we should spawn a projectile or apply instant damage
@@ -108,7 +113,8 @@ pub fn resolve_combat_tick(
         // apply_projectile_impact.
         return CombatResult {
             damage_dealt: 0.0, // Defer damage
-            status_applied: generate_status_effects(&attacker_stats.abilities, game_data),
+            status_applied: status_effects,
+            attacker_status_applied: attacker_status_effects,
             defender_died: false,
             projectile_spawned: Some((attacker_stats.attack_type.clone(), actual_damage)),
         };
@@ -116,8 +122,6 @@ pub fn resolve_combat_tick(
 
     // Apply damage instantly (Melee)
     let defender_would_die = defender.is_alive() && (defender_stats.health - actual_damage) <= 0.0;
-
-    let status_effects = generate_status_effects(&attacker_stats.abilities, game_data);
 
     // Log combat using all stats for debug
     if actual_damage > 0.0 {
@@ -136,6 +140,7 @@ pub fn resolve_combat_tick(
     CombatResult {
         damage_dealt: actual_damage,
         status_applied: status_effects,
+        attacker_status_applied: attacker_status_effects,
         defender_died: defender_would_die,
         projectile_spawned: None,
     }
@@ -149,7 +154,9 @@ fn is_stunned(entity: &Entity) -> bool {
         crate::state::entities::EntityType::Structure(_)
         | crate::state::entities::EntityType::ResourcePile(_) => return false,
     };
-    status_effects.iter().any(|e| e.effect_type == "stun")
+    status_effects
+        .iter()
+        .any(|e| e.effect_type == "stun" || e.effect_type == "charm")
 }
 
 fn get_type_name(entity_type: &crate::state::entities::EntityType) -> String {
@@ -198,16 +205,24 @@ pub fn extract_combat_stats(entity: &Entity, game_data: &GameData) -> CombatStat
                     * creature_state.darkness;
             let defense_multiplier: f32 = trait_data.iter().map(|t| t.defense_multiplier).product();
 
+            let (damage_multiplier, attack_speed_multiplier) = combat_ability_multipliers(
+                &creature_data.combat.abilities,
+                creature_state.health,
+                creature_state.max_health,
+                game_data,
+            );
+
             CombatStats {
                 health: creature_state.health,
                 attack: creature_data.stats.attack
                     * level_multiplier
                     * attack_multiplier
-                    * darkness_multiplier,
+                    * darkness_multiplier
+                    * damage_multiplier,
                 defense: creature_data.stats.defense * level_multiplier * defense_multiplier,
                 attack_type: creature_data.combat.attack_type.clone(),
                 damage_range: creature_data.combat.damage_range,
-                attack_speed: creature_data.combat.attack_speed,
+                attack_speed: creature_data.combat.attack_speed * attack_speed_multiplier,
                 resistances: creature_data.combat.resistances.clone(),
                 level: creature_state.level,
                 abilities: creature_data.combat.abilities.clone(),
@@ -338,24 +353,68 @@ fn calculate_resistance_multiplier(attacker: &CombatStats, defender: &CombatStat
     1.0 - (base_resistance / 100.0)
 }
 
+/// Read deterministic attack multipliers and health-gated enrage effects from
+/// the same authored ability table used for status procs.
+fn combat_ability_multipliers(
+    abilities: &[String],
+    health: f32,
+    max_health: f32,
+    game_data: &GameData,
+) -> (f32, f32) {
+    let health_fraction = if max_health > 0.0 {
+        health / max_health
+    } else {
+        0.0
+    };
+    abilities
+        .iter()
+        .fold((1.0, 1.0), |(damage, speed), ability| {
+            let Some(effect) = game_data.config.status_effects.ability_effects.get(ability) else {
+                return (damage, speed);
+            };
+            if effect
+                .health_threshold
+                .is_some_and(|threshold| health_fraction > threshold)
+            {
+                return (damage, speed);
+            }
+            (
+                damage * effect.damage_multiplier.unwrap_or(1.0).max(0.0),
+                speed * effect.attack_speed_multiplier.unwrap_or(1.0).max(0.0),
+            )
+        })
+}
+
 /// Roll each of the attacker's combat abilities against the data-driven
 /// `game_data.config.status_effects.ability_effects` table, returning the status effects that
 /// proc'd on this landed hit. Abilities with no entry in that table (e.g. ones that aren't a
 /// poison/burn/freeze/stun proc, like a flat damage bonus) are silently skipped here.
-fn generate_status_effects(abilities: &[String], game_data: &GameData) -> Vec<StatusEffect> {
-    let mut effects = Vec::new();
+fn generate_status_effects(
+    abilities: &[String],
+    game_data: &GameData,
+) -> (Vec<StatusEffect>, Vec<StatusEffect>) {
+    let mut defender_effects = Vec::new();
+    let mut attacker_effects = Vec::new();
     for ability in abilities {
         if let Some(ability_effect) = game_data.config.status_effects.ability_effects.get(ability) {
-            if macroquad_toolkit::rng::gen_range(0.0f32, 1.0) < ability_effect.proc_chance {
-                effects.push(StatusEffect {
-                    effect_type: ability_effect.status_type.clone(),
-                    duration: ability_effect.duration,
-                    strength: ability_effect.strength,
-                });
+            if ability_effect.status_type == "none"
+                || macroquad_toolkit::rng::gen_range(0.0f32, 1.0) >= ability_effect.proc_chance
+            {
+                continue;
+            }
+            let effect = StatusEffect {
+                effect_type: ability_effect.status_type.clone(),
+                duration: ability_effect.duration,
+                strength: ability_effect.strength,
+            };
+            if ability_effect.applies_to_attacker {
+                attacker_effects.push(effect);
+            } else {
+                defender_effects.push(effect);
             }
         }
     }
-    effects
+    (defender_effects, attacker_effects)
 }
 
 /// Apply combat result to entities
@@ -367,6 +426,8 @@ pub fn apply_combat_result(
     game_data: &GameData,
     current_time: f32,
 ) {
+    apply_status_effects_to_entity(entities, attacker_id, &result.attacker_status_applied);
+
     // Apply damage to defender
     if let Some(defender) = entities.get_mut(&defender_id) {
         if result.damage_dealt > 0.0 {
@@ -388,28 +449,7 @@ pub fn apply_combat_result(
 
     // Apply status effects to defender. "freeze" slows movement immediately on application;
     // combat::update_status_effects reverts the slow when the effect's duration runs out.
-    if let Some(defender) = entities.get_mut(&defender_id) {
-        for effect in &result.status_applied {
-            match &mut defender.entity_type {
-                crate::state::entities::EntityType::Creature(state) => {
-                    if effect.effect_type == "freeze" && effect.strength != 0.0 {
-                        state.movement_speed *= effect.strength;
-                    }
-                    state.status_effects.push(effect.clone());
-                }
-                crate::state::entities::EntityType::Hero(state) => {
-                    if effect.effect_type == "freeze" && effect.strength != 0.0 {
-                        state.movement_speed *= effect.strength;
-                    }
-                    state.status_effects.push(effect.clone());
-                }
-                crate::state::entities::EntityType::Structure(_) => {
-                    // Structures don't take status effects yet
-                }
-                crate::state::entities::EntityType::ResourcePile(_) => {}
-            }
-        }
-    }
+    apply_status_effects_to_entity(entities, defender_id, &result.status_applied);
 
     // Handle death and experience separately to avoid borrow issues
     let defender_died = result.defender_died;
@@ -491,6 +531,12 @@ pub fn apply_projectile_impact(
         }
     }
 
+    apply_status_effects_to_entity(
+        entities.entities_mut(),
+        impact.defender_id,
+        &impact.status_effects,
+    );
+
     // XP Awarding needs to happen safely.
     // Check if defender died
     let defender_dead_and_level = if let Some(defender) = entities.get(impact.defender_id) {
@@ -512,6 +558,38 @@ pub fn apply_projectile_impact(
     if let Some(level) = defender_dead_and_level {
         if let Some(attacker) = entities.get_mut(impact.attacker_id) {
             award_experience(attacker, level, game_data);
+        }
+    }
+}
+
+fn apply_status_effects_to_entity(
+    entities: &mut HashMap<EntityId, Entity>,
+    entity_id: EntityId,
+    effects: &[StatusEffect],
+) {
+    let Some(entity) = entities.get_mut(&entity_id) else {
+        return;
+    };
+    for effect in effects {
+        match &mut entity.entity_type {
+            crate::state::entities::EntityType::Creature(state) => {
+                if (effect.effect_type == "freeze" || effect.effect_type == "speed_modifier")
+                    && effect.strength != 0.0
+                {
+                    state.movement_speed *= effect.strength;
+                }
+                state.status_effects.push(effect.clone());
+            }
+            crate::state::entities::EntityType::Hero(state) => {
+                if (effect.effect_type == "freeze" || effect.effect_type == "speed_modifier")
+                    && effect.strength != 0.0
+                {
+                    state.movement_speed *= effect.strength;
+                }
+                state.status_effects.push(effect.clone());
+            }
+            crate::state::entities::EntityType::Structure(_)
+            | crate::state::entities::EntityType::ResourcePile(_) => {}
         }
     }
 }
@@ -558,7 +636,7 @@ fn expired_speed_multipliers(status_effects: &[StatusEffect]) -> Vec<f32> {
 }
 
 /// Update status effects on an entity: ticks duration down, applies poison/burn damage over
-/// time, and reverts freeze/speed_modifier movement-speed changes once they expire. Stun has no
+/// time, and reverts freeze/speed_modifier movement-speed changes once they expire. Stun/charm has no
 /// per-tick effect here; combat::resolve_combat_tick checks for it directly before an attack.
 pub fn update_status_effects(entity: &mut Entity, dt: f32) {
     match &mut entity.entity_type {

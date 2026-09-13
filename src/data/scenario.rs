@@ -193,7 +193,10 @@ pub enum EventTrigger {
     },
     /// Fires when an entity of `owner` stands on a tile whose authored
     /// `special.triggers_event` value matches `event`.
-    TileEvent { event: String, owner: OwnerId },
+    TileEvent {
+        event: String,
+        owner: OwnerId,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

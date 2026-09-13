@@ -211,6 +211,7 @@ fn freeze_status_effect_slows_movement_and_reverts_on_expiry() {
             duration: 2.0,
             strength: 0.5, // 50% slow
         }],
+        attacker_status_applied: Vec::new(),
         defender_died: false,
         projectile_spawned: None,
     };
@@ -244,6 +245,80 @@ fn freeze_status_effect_slows_movement_and_reverts_on_expiry() {
         reverted_speed, base_speed,
         "speed should revert once freeze expires"
     );
+}
+
+#[test]
+fn authored_monster_abilities_modify_combat_stats() {
+    let mut game_data = GameData::load().expect("game data should load");
+
+    let mut entities = crate::state::entities::EntityManager::new();
+    let orc_id = entities.spawn_creature(
+        TilePos::new(1, 1),
+        CreatureState::new("orc".to_string(), 1, 100.0, 20.0, 1),
+    );
+    let charged = combat::extract_combat_stats(entities.get(orc_id).unwrap(), &game_data);
+    game_data
+        .monsters
+        .get_mut("orc")
+        .unwrap()
+        .combat
+        .abilities
+        .clear();
+    let uncharged = combat::extract_combat_stats(entities.get(orc_id).unwrap(), &game_data);
+    assert_eq!(charged.attack, uncharged.attack * 1.5);
+
+    let demon_id = entities.spawn_creature(
+        TilePos::new(2, 1),
+        CreatureState::new("demon_spawn".to_string(), 1, 100.0, 20.0, 2),
+    );
+    let demon_full = combat::extract_combat_stats(entities.get(demon_id).unwrap(), &game_data);
+    entities
+        .get_mut(demon_id)
+        .unwrap()
+        .as_creature_mut()
+        .unwrap()
+        .health = 40.0;
+    let demon_enraged = combat::extract_combat_stats(entities.get(demon_id).unwrap(), &game_data);
+    assert!(demon_enraged.attack > demon_full.attack);
+    assert!(demon_enraged.attack_speed > demon_full.attack_speed);
+}
+
+#[test]
+fn projectile_impacts_apply_and_expire_speed_statuses() {
+    let game_data = GameData::load().expect("game data should load");
+    let mut entities = crate::state::entities::EntityManager::new();
+    let attacker_id = entities.spawn_creature(
+        TilePos::new(1, 1),
+        CreatureState::new("goblin".to_string(), 1, 100.0, 10.0, 1),
+    );
+    let defender_id = entities.spawn_creature(
+        TilePos::new(2, 1),
+        CreatureState::new("goblin".to_string(), 1, 100.0, 10.0, 2),
+    );
+    let base_speed = entities
+        .get(defender_id)
+        .unwrap()
+        .as_creature()
+        .unwrap()
+        .movement_speed;
+    let impact = crate::state::projectiles::Impact {
+        attacker_id,
+        defender_id,
+        damage: 0.0,
+        status_effects: vec![StatusEffect {
+            effect_type: "speed_modifier".to_string(),
+            duration: 1.0,
+            strength: 1.5,
+        }],
+    };
+    combat::apply_projectile_impact(&impact, &mut entities, &game_data, 0.0);
+    let defender = entities.get_mut(defender_id).unwrap();
+    assert_eq!(
+        defender.as_creature().unwrap().movement_speed,
+        base_speed * 1.5
+    );
+    combat::update_status_effects(defender, 1.1);
+    assert_eq!(defender.as_creature().unwrap().movement_speed, base_speed);
 }
 
 #[test]

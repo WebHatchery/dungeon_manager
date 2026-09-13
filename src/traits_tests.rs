@@ -20,8 +20,9 @@ fn strong_trait_multiplies_creature_attack_in_combat_stats() {
 
     let stats = combat::extract_combat_stats(entity, &game_data);
 
-    // level 1 -> level_multiplier is 1.0, so this isolates the "strong" trait's 1.15x.
-    assert_eq!(stats.attack, troll_data.stats.attack * 1.15);
+    // Level 1 has no level bonus. Troll's authored smash multiplier is also
+    // active, so this checks the trait and combat-ability layers together.
+    assert_eq!(stats.attack, troll_data.stats.attack * 1.15 * 1.25);
 }
 
 #[test]

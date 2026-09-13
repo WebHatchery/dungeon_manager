@@ -185,18 +185,19 @@ fn every_scenario_availability_entry_names_real_content() {
 /// expiry, and `fear` raises a hero's breaking point in
 /// `hero_ai::current_retreat_threshold`.
 ///
-/// `speed_modifier` is deliberately absent. `apply_combat_result` multiplies
-/// speed only for `freeze`, but `expired_speed_multipliers` *divides* back out
-/// for both — so a creature ability authored as `speed_modifier` would revert a
-/// multiplier that was never applied and leave its victim permanently faster.
-/// Spells push that status themselves and do apply the multiplier, which is why
-/// the asymmetry has never bitten.
-const ENGINE_CONSUMED_STATUS: &[&str] = &["poison", "burn", "stun", "freeze", "fear"];
-
-/// Creature abilities with no combat effect wired, each tracked in TODO.md.
-/// **Shrink this list; do not grow it.** An ability here is authored on a
-/// creature, shown to the player, and does nothing.
-const INERT_ABILITIES: &[&str] = &["charge", "smash", "berserk", "charm"];
+/// `speed_modifier` is applied on status arrival and reverted on expiry just
+/// like `freeze`; `charm` blocks attacks like a tactical stun. `none` is the
+/// explicit marker for a deterministic stat multiplier with no proc status.
+const ENGINE_CONSUMED_STATUS: &[&str] = &[
+    "poison",
+    "burn",
+    "stun",
+    "freeze",
+    "fear",
+    "speed_modifier",
+    "charm",
+    "none",
+];
 
 #[test]
 fn every_creature_ability_is_wired_or_declared_inert() {
@@ -220,9 +221,6 @@ fn every_creature_ability_is_wired_or_declared_inert() {
 
         for ability in abilities {
             let name = ability.as_str().expect("ability name");
-            if INERT_ABILITIES.contains(&name) {
-                continue;
-            }
             match effects.get(name) {
                 None => problems.push(format!(
                     "creature `{id}` has ability `{name}`, which is neither in \
