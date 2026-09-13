@@ -1,168 +1,54 @@
 # TODO — Deep Dominion
 
-## In scope
+## Standards and architecture
 
-Everything below this section is a backlog. **These items are the committed
-work**, and the target that binds them is one player finishing one mission
-start-to-finish without a developer sitting next to them. Each is scoped to the
-smallest version that clears that bar — not to the full item the backlog
-describes.
+- [ ] Expose testable game and graphics-generation logic through `src/lib.rs`; make the binaries use it and migrate all tests/helpers from `src/` and `graphics_gen/` into `tests/`. Preserve private internals behind intentional public APIs (§11.4).
+- [ ] Review migrated suites by feature, consolidating related inputs toward five tests without losing regression coverage; explain justified exceptions. Start with map loading, lighting, combat, saves, and room placement (§11.3).
+- [ ] Split cohesive responsibilities before expanding `engine/hero_ai.rs` (792 lines), `engine/creature_ai.rs` (781), and `graphics_gen/tiles/rooms.rs` (789). Migrate affected legacy `mod.rs` roots to named files and retain the existing source gate with an empty exception list (§2.2–2.3).
+- [ ] Remove blanket dead-code/unused-import suppressions in `src/main.rs`, `graphics_gen/mod.rs`, and the balance calculator; remove unused arguments such as tutorial `_game_data` and sidebar `_current_mode`. Fix warnings and document narrowly justified Clippy allowances (§1.4, §10.2).
+- [ ] Refactor `engine/input/playing.rs::handle_playing` into focused handlers below 100 lines; replace long argument lists with explicit interaction context. Give renderer entry points read-only game/mode references and route gameplay input through the existing action dispatcher (§4, §5.1, §7).
+- [ ] Externalize tutorial steps, targets, UI/notification strings, imp claim delay, and hero ability thresholds into typed JSON under `assets/`, loaded through toolkit APIs. Add project-owned validation for IDs, references, finite balance values, and supported effects/triggers at startup; report invalid content clearly (§5.3, §6).
+- [ ] Replace duplicated balance-test schemas/loaders with the public game-data API, and convert remaining calculator-only simulation assertions into behavior tests run by existing CI (§5.3, §11).
+- [ ] Strengthen `tests/live_data_fields_tests.rs`: exclude test-only reads and distinguish struct fields with common names. Reconcile `UNCONSUMED` against actual consumers, wiring or removing inert room/tile/trap/hero/config fields rather than preserving misleading allowances (§1.4).
+- [ ] Cache save availability on menu entry and refresh after save/load/delete; remove per-frame `any_save_exists()` calls from menus and sidebar rendering.
+- [ ] Harden fallible startup/resource paths with visible retry or recovery actions; replace unchecked float comparisons in sidebar research sorting and hero targeting with validated values or safe ordering (§6).
+- [ ] Isolate simulation randomness in state-owned RNG or small helpers; separate procedural graphics randomness and add seed-repeatability/save-resume regression coverage. Deduplicate AI distance/movement helpers where behavior matches.
+- [ ] Profile large-map entity-position scans, pathfinding, room discovery, threat calculation, sidebar layout, and light-map rebuilding; add spatial indexing or invalidation-based caches where measurements justify them.
+- [ ] Add missing module-purpose comments during these refactors; correct `docs/gdd.md`'s Bevy ECS claim and align README scope with campaign gameplay (§9).
 
-**Save slots are done** — `SaveSlot` (three numbered plus an autosave) owns slot
-identity in `state/save_system.rs`, saves go to `{app_data}/dungeon_manager/`
-through the toolkit's slot API rather than to a relative path, one browser serves
-both save and load, and the autosave writes every 180s of unpaused play to a slot
-the player cannot be given. Captured at `docs/verification/ui_loadgame.png`.
+## Touch controls and onboarding
 
-### 1. Tutorial coverage
+- [ ] Add visible controls/gestures for camera pan, rotation, zoom, cancel/unmark/slap, and return-to-menu after defeat or final victory; these currently depend on keyboard, wheel, or right-click input in `engine/input/playing.rs` and `tile_actions.rs` (§7.5).
+- [ ] Replace hand-rolled menu/sidebar press hit-tests with toolkit release buttons where immediate activation is unnecessary. Share layout between drawing and input, and verify controls/tutorial overlays fit narrow browser windows and supported text scales (§7.4–7.5).
+- [ ] Give the intro an explicit visible Begin control; update tutorial, menu, README, and `game_page.json` shortcut instructions to name exact tap controls. Extend tutorial progression through combat, traps, wages/moods, research, and surviving the first hero wave; add later contextual guidance for spells, prison/torture, and temple use (§7.5).
+- [ ] Verify one full mission from start through recovery using touch controls, plus desktop layouts; replace matching captures directly in `docs/verification/` and run parameterless `publish.ps1` after implementation (§8.3, §12).
 
-`STEPS` in `engine/tutorial_system.rs` is six steps — dig, claim, Lair, Hatchery,
-Treasury, recruit — and stops there. A player who finishes it has never met
-combat, traps, spells, research, wages, moods, the minimap, or a hero wave, which
-is everything that decides whether they survive the mission they are in.
+## Gameplay and authored content
 
-Done means: coverage through the first hero wave, so the tutorial hands off at the
-point the player has something to defend and knows how to defend it. Priority
-order is defence-critical first — hero waves and combat, then traps, then
-wages/moods (creatures desert and the player never learns why), then research.
-Spells, prison/torture and the temple can wait; they are not on the path to
-surviving.
+- [ ] Implement remaining monster ability hooks for `charge`, `smash`, `berserk`, and `charm`; make combat speed-modifier application and expiry symmetric, including projectile impacts.
+- [ ] Implement the `polymorph` effect used by `chickenify`, and the missing ritual/corruption/stealth/trap triggers behind dispel, purify, backstab, teleport, and mass_cleanse; validate unsupported authoring instead of silently accepting inert abilities.
+- [ ] Connect `SpecialData::triggers_event` to scenario events and add a conversion-count objective trigger so authored conversion goals can complete.
+- [ ] Add room efficiency rules for adjacency, shape, and doors; support creature contributions to ritual output. Resolve construction-time scale before adding per-tile build progress, or remove that unused field.
+- [ ] Complete defensive interactions: imp trap rearming, magical door locking, alarm responses, player-directed wall reinforcement, and terrain damage for wall-breaking creatures. Reconcile Gatehouse behavior with `docs/ROOM_SET.md`.
+- [ ] Implement authored mana upkeep for Ironbound/Balor and environmental terrain damage/movement effects; ensure their descriptions and balance values match actual behavior.
+- [ ] Extend rival keepers with paid, timed digging/building/reinforcement and defensive/research actions; support multiple rivals. Specify formation behavior and ranged-combat gaps before extending combat AI.
+- [ ] Resolve sleep/kennel population-cap rules, give eating and gold-deposit rooms distinct task semantics, and make authored recovery rates reachable. Add a comfort need so creatures deliberately seek amenities.
+- [ ] Resolve missing Mentor's Den/Doctrine Chamber designs referenced through absent `docs/rooms.md`; define per-creature door/trap bypass before adding Assassin Wisp. Add species rivalry/brawl behavior if retained in the roster design.
+- [ ] Make mutation progress and results inspectable in creature UI, including contributing rooms; add transformation feedback.
+- [ ] Add map quality checks and regenerate poor layouts; stage large-map generation across frames. Verify scouting visibility across terrain, entities, and minimap, including the reported residual rival-lair leak.
+- [ ] Extend hand interactions to gold/objects. Document concrete build-or-cut scope for possession, surface raids, meta-progression, trade/hiring, creature corpses, spell miscasts/counters/modifiers, and gamepad navigation.
+- [ ] Reconcile campaign technology rewards, temple availability, undead acquisition, and routes for assaulting the hero base with authored progression. Document those rules in project design guidance.
+- [ ] Define supported content-pack behavior and provide a validated example and authoring instructions, or remove the unused public-facing mod surface.
 
-**Note before starting:** `STEPS` is a hardcoded Rust `const`, which contradicts
-this project's data-driven rule. Roughly doubling its length is the wrong moment
-to keep it in Rust — move it to `assets/` first, then author. That also makes step
-text reachable by the localization item later.
+## Presentation, settings, and persistence
 
-### 2. Wave 1
+- [ ] Integrate the existing toolkit audio manager for dungeon SFX, music, raid/outcome transitions, and persisted volume controls; add shared mixer/panning/ducking capabilities only where missing. Produce an initial usable sound set with documented asset provenance and verify browser playback.
+- [ ] Add sprite animation and event feedback for combat, death, spells, traps, digging, gold, and heart damage, using shared toolkit effects where suitable; provide reduced-motion controls.
+- [ ] Add smooth authored light flicker and resolve room-wall sprite generation/rendering or remove unused wall-art fields. Review palette consistency, menu/sidebar art, and replace the minimap's fixed 20×20 viewport approximation with camera-derived bounds.
+- [ ] Extend settings with key remapping, camera options, autosave enable/disable, display options, scalable text, colorblind-safe factions, and hold/toggle controls; persist values through existing toolkit settings.
+- [ ] Add save deletion and quicksave/quickload with visible controls; use toolkit version inspection/migration hooks to handle incompatible and older save formats explicitly.
 
-**Wave 1 now scales like every other wave.** It was the one wave with no dial on
-it — `HeroBase::new` seeded the countdown from `initial_delay` (600s) and nothing
-scaled it, so the first wave landed at exactly 10:00 on the tutorial map at Easy
-and on the hardest mission at Hard alike. `update_wave_system` now counts down at
-the threat multiplier instead of dividing the interval at the moment it is set,
-which is what reaches wave 1 at all: the seed happens before a scenario or a
-difficulty exists. Three tests pin it, all verified by reverting the change.
+## Balance verification
 
-What remains is the half that needs measurement, not code: **reconcile the timing
-against what a player can actually build in that window.** On `the_iron_siege` at
-Normal the first wave is now ~444s (600 / 1.35); nobody has checked what a
-competent player has standing by then. Notes for taking that measurement:
-
-- The starting-gold item under Balance is the same complaint from the other side —
-  more setup time and faster setup are interchangeable fixes. Measure before
-  turning either.
-- The old entry claimed the balance numbers assert a **~33-minute** first wave.
-  They do not: config authors 600s and the only assertion in `balance_calculator`
-  is `initial_delay >= 30.0` *seconds*. That figure came from somewhere else and
-  should not be trusted.
-- `time_until_next_wave` is now denominated in *unscaled* seconds, so a save
-  written mid-countdown before this change resumes slightly faster than it was
-  stored. One-time and sub-wave, but it is the first real instance of the
-  save-migration item in the backlog.
-
----
-
-## Engine & simulation
-
-- Wire the 4 non-proc monster abilities (`charge`, `smash`, `berserk`, `charm`) — they need bonus-damage / self-buff / morale hooks the engine lacks.
-- Wire the `tile_transform` and `polymorph` spell effect types; `corrupt_land`, `make_earth` and `chickenify` currently fall through the dispatcher and do nothing.
-- 5 hero abilities (dispel, purify, backstab, teleport, mass_cleanse) stay inert until ritual-detection, stealth and trap-state subsystems exist.
-- Gem seam tuning: a seam pays its authored 25 per dig against a vein's 100 and is never consumed. The plumbing is done and pinned by a test; the 4x gap may make seams not worth an imp's time. Wants the playtest program.
-- Creature social dynamics: same-faction hostility is hard-off, so there is no infighting, species rivalry or brawl-breaking.
-- Room efficiency mechanics: adjacency bonuses, door placement, shape penalties. The Cultist's "generates power through sacrifice synergy" is the same shape — `generate_room_mana` is `tiles × efficiency × rate` and does not know which creatures are standing in the room, so no creature can contribute to a ritual circle's output.
-- Rival keeper economy: digs and builds instantly and spawns free reinforcements; no traps, spells or research. Also support multiple simultaneous rivals.
-- Trap ammunition/reload supply chain (imps rearm traps), magical door locking, alarm traps that summon defenders.
-- Player-directed wall reinforcement. The Stone Warden's `stonebinding` produces `reinforced_wall`, but only near where you station it — there is still no way to point at a specific wall and order it reinforced.
-- No creature can damage terrain, so the Balor's authored "breaks walls" has no mechanic.
-- No mana upkeep anywhere: `economy.wage_per_minute` is gold-only, and the engine's `needs` keys are sleep/food/gold/training. Both the Ironbound's "drains mana instead" and the Balor's "burns mana" want this same missing feature.
-- Environmental hazards as gameplay: lava/water damage and movement effects.
-- Fog-of-war scouting gameplay; the tile field exists but no mechanics use it.
-- Investigate the residual visibility leak that let a player see the rival keeper's lair.
-- Hand interactions for gold and objects, not only creatures.
-- Formation system and ranged combat improvements.
-- A conversion-count trigger, so "convert N heroes" style `custom` objectives become winnable win conditions.
-- Map generator: quality metrics with regenerate-on-poor-quality, and chunked generation for large maps.
-- Mutation presentation: `engine/mutation.rs` works, but a mutation announces itself with a notification and nothing else — no transformation effect, no entry in any creature list, and no way for the player to see *which* rooms a creature is close to evolving through.
-- `apply_combat_result` multiplies `movement_speed` only for `freeze`, while `expired_speed_multipliers` divides back out for `freeze` *and* `speed_modifier` — so a creature ability authored as `speed_modifier` would leave its victim permanently faster. A test rejects that authoring outright; the cleaner fix is to make application symmetric.
-- `SpecialData::triggers_event` is inert: there is no event system to fire `ancient_awakening`.
-- Scope decisions to take (build or cut): possession mode, overworld/surface raiding, meta-progression (faction runs, cross-mission unlocks), trade/hiring economy.
-
-## Content
-
-- The Gatehouse ships as a defensive *bonus* room, not `docs/ROOM_SET.md`'s "gates auto-close under threat" version — that wants a threat-detection subsystem it shares with alarm traps and the fog-of-war item. Decide whether to build it or restate the room as it now is.
-- `UNCONSUMED` in `tests/live_data_fields_tests.rs` is the honest inventory of authored-but-inert data fields. The biggest clusters:
-  - **Room build time** — `construction_time` is ignored, so rooms appear the instant they are paid for rather than being raised. Note before building this: the authored values are 0.4–0.9s, so wiring them as written buys a sub-second delay in exchange for a save-format change (per-tile progress) and renderer work to show a part-built room. Either re-scope the numbers to something a player would notice, or drop the field.
-  - **The rest of the hero behaviour model** — `door_break_chance` (heroes never attack doors — they path around them, so there is nothing to roll against) and `call_for_aid` (needs a hero rally mechanic; the natural shape is a threatened hero pulling nearby allies onto their attacker).
-- The field guard matches field *names* as text across `src/`, so a field sharing a name with a live one (`sprite`, `name`, `id`, `cost`, `icon`) reads as live even when it is dead — that is how `visual.sprite` stayed invisible in both rosters. Making the sweep struct-aware needs real parsing rather than text matching; until then, distrust it for common names.
-- Hero-building destruction penalties **stack globally**: two razed barracks each contribute their full 50%, reaching the 90% cap. Whether that is right is a design question (it does reward levelling more of the base) rather than a bug.
-- The hero base sits behind solid rock and creatures do not dig, so the keeper cannot assault it unaided at all — the raiders have to follow the corridor the heroes tunnel in through. That is a genuine asymmetry (heroes come to you) and may be worth an explicit design decision rather than an accident of the map.
-- **9 of 20 heroes** are authored `will_fight_to_death`, including the `battle_cleric` that spawns in wave 1, so nearly half the roster never retreats regardless of the nerve model. Faithful to the data, but a much broader balance property than one late-game outlier — wants a real playtest.
-- The Soul Furnace burns *hero* corpses only, matching the graveyard. Dead creatures still vanish with nothing to show for them — decide whether your own fallen should be renderable, which is a tone question as much as a balance one.
-- The temple is available in only 1 of 13 missions (`pacts_and_sacrifice`), so its `mana_generation_per_second` and the whole prayer loop are nearly unreachable in the campaign. Either widen its availability or accept that the ritual circle is the real mana room.
-- `execute_sleep`, `execute_eat` and `execute_deposit_gold` still test `room_type ==` a specific room. These are *not* the same edit `research` and `train` were — each needs a data decision first, so don't generalize them mechanically:
-  - **sleep** — the `sleep` family is `lair` *and* `kennel`, so widening it lets creatures sleep in kennels. Probably right (a kennel is where beasts sleep), but it interacts with `count_available_lair_tiles`, which sets the creature cap. Decide the cap question first. Until then the kennel's authored `sleep_recovery_rate: 1.2` stays unreachable — the lair's 1.0 is the only one the engine can see.
-  - **eat** — the hatchery is `task_type: "work"`, so there is no `eat` family to match on. Needs a `task_type` reassignment, which changes what `execute_work` sees.
-  - **deposit** — the treasury is `task_type: "none"`, shared with graveyard, vault, mana_well and leisure_den. Keying on it would make the graveyard a treasury. Needs its own task type.
-- The rest of the amenity tier (Mentor's Den, Doctrine Chamber) is pure data now that `happiness_modifier` is live — but `docs/rooms.md`, which `docs/ROOM_SET.md` cites as their design source, **does not exist**. Either write the designs or drop the rooms; there is nothing to build from.
-- Creature AI has no *need* that an amenity room satisfies, so creatures only reach the Leisure Den by wandering into it. A `comfort` need in `monsters.json` with `satisfied_by: ["leisure_den"]` would let them seek it out deliberately, the way they already seek food and sleep.
-- **Only the Assassin Wisp remains** unauthored from `docs/monsters.md`, and it is still blocked: its signature "bypasses doors and traps" is *already true of every creature* — `process_trap_triggers` only iterates `entities.heroes()`, so no creature can trigger a trap. Door bypass would need a per-creature pathfinding flag.
-- No scenario lists **any** undead in `availability.creatures` — not skeleton, zombie, ghost or vampire, nor Lich or Grave Hulk. That is consistent rather than an omission (the tier is reached through `necromancy` research, and `availability` only seeds the starting set), but worth confirming that is the intent before someone "fixes" it.
-- Rooms declare a `visual.wall_sprite` (`tiles/lair_wall.png`, …) that no generator emits and nothing reads. Deciding this needs a renderer answer, not a data one: walls are `solid_rock`/`earth` tiles, so drawing a room's own wall art means a per-wall-tile adjacency lookup every frame — which collides with the O(n) scan problem already flagged under Code quality. Treat it as part of the lighting/atmosphere pass, or drop the field.
-- Spell depth that needs engine hooks: miscasts, hero counter-spells, research-unlocked spell modifiers.
-- Decide the fate of the mod/content-pack system: `mods/load_order.json` ships empty — market it (docs, examples, validation) or cut it.
-- Wire campaign missions to grant *technologies* rather than raw unlocks, so research gates progression.
-
-## Audio
-
-- Audio engine layer with WASM support, built into `macroquad-toolkit` so every game benefits.
-- SFX set (~60–100 sounds): digging, claiming, room build, gold pickup/deposit, combat, spells, traps, creature moods, UI, alerts.
-- Music: main theme, ambient dungeon layers, raid/combat transitions, victory and defeat cues.
-- Mixing, ducking, camera-relative panning, master/music/SFX volume settings with persistence.
-- Sourcing decision: commission, license or produce — budget and pipeline.
-
-## Visuals & game feel
-
-- Animation: every sprite is a single static 64×64 frame. Pick a tier (walk/attack/death frames, or procedural bob/squash/flip) and budget it.
-- Particles and feedback: hit flashes, damage numbers, death poofs, spell VFX, trap triggers, dig debris, gold sparkle, heart-damage screen shake — none exist.
-- Remaining atmosphere-pass work on the lighting system:
-  - **`flicker` is still unread** — it needs a time-varying term, which means the light map stops being a pure function of the dungeon. Cheap to add once there is a frame clock to hand; deliberately not to be faked with a per-frame random, which would strobe rather than flicker.
-  - The light map is rebuilt once per tick on `GameState`. It splats outward from sources rather than asking each tile what lights it, so it is a few thousand operations — but it is still redundant work between dungeon changes, and belongs with the caching item under Code quality.
-- Every existing sprite was authored while looking at inverted key lighting, so some base colours may have been chosen to compensate for the darkness. A post-fix sweep showed no blowouts, but a colour pass is worth doing when the palette is next revisited.
-- UI art overhaul — playtest feedback calls the UI dated and Rust-default. Includes real entity rendering, sidebar animation and the minimap viewport.
-- Title/menu art beyond the single `main_menu_bg.png`.
-
-## UI & UX
-
-- Settings menu breadth: resolution and window modes, volume sliders, keybind remapping (keys are hardcoded in `engine/input.rs`), camera/scroll options, autosave toggle.
-- Save system, beyond the shipped slots: quicksave/quickload, save format versioning/migration, and a way to **delete** a save (`persistence::delete_slot` is already there, and three slots with no way to clear one is a corner players reach).
-- The autosave interval is authored (`timing.autosave_interval`, 180s) but there is no toggle. `AutoSaveManager::set_enabled` is ready for one — it belongs with the settings-menu item above, not with the save system.
-- Tutorial, beyond the coverage in scope above: spells, prison/torture, the temple, contextual hints and an intro.
-- Hotkey overlay / help screen.
-- Localization: no i18n layer, all strings hardcoded English — externalize strings before it gets expensive.
-- Accessibility: colorblind-safe faction palettes, text scaling beyond 3 steps, hold-vs-toggle options, screen-shake toggle.
-- Decide on gamepad support (probably cut, but Steam Deck verification wants basic navigation).
-
-## Balance
-
-- Hero/creature level asymmetry: heroes gain +15%/level to cap 10, creatures +10% to cap 5 — the late game mathematically favours heroes.
-- Wave pacing beyond wave 1 (in scope above): reconcile the shipped `wave_interval` and scaling curve against the balance numbers across a full mission.
-- Starting gold scarcity near the dungeon core. Couples to the wave-1 item in scope above — more setup time and faster setup are interchangeable fixes, so measure before turning either.
-- Room sell refund is 5%; 25–50% would make experimentation viable.
-- Creature value outliers: Bile Demon overpriced, Hellhound free, Succubus mood loop, treasury desirability clustering.
-- Creature wage and need decay rates still untuned.
-- Structured playtest program: wave-1 survivability, sustainable army size, wave-10+ viability, per-mission tuning. The `wave` and `raid` capture scenes make the first two observable without a ten-minute sit — a first run showed wave 1 (2 heroes) reaching the dungeon heart and taking it to 988/1000 within ~15s of launching. Treat that as a starting point rather than a verdict: the scene seeds dig orders, which opens paths a real wave-1 dungeon would not have.
-- Fold the `balance_calculator` simulations into `cargo test`/CI — its assertions are hand-rolled bools with no `#[test]`s.
-
-## Code quality
-
-- Error-handling hardening: ~25 `unwrap()`, 9 `expect()`, 4 `panic!` — asset loading and save handling especially.
-- Deduplicate movement and distance logic between `creature_ai` and `imp_ai` (two `manhattan_distance` impls).
-- Test coverage: combat math has one test, save/load one, UI/actions none. Add tests for menu action handlers, sidebar selection, tooltip state and dungeon command dispatch.
-- Scenario fixtures for room placement, resource flow, encounters and progression milestones.
-- Separate model mutation from the renderer and sidebar modules so UI actions call explicit domain commands.
-- Performance on large maps: O(n) entity-position scans need a spatial index; cache pathfinding and room detection; profile the sidebar and renderer paths that recompute layout every frame. `effective_threat_multiplier` belongs on this list too — it is called twice per tick in `hero_spawner` and each call scans the creature list.
-- **Per-frame filesystem IO in the menus.** `any_save_exists()` runs while the main menu, pause menu and sidebar are on screen, and now stats up to six paths per frame (three slots × current + legacy locations) where it used to stat one. Existence checks are cheap and this was already the shape before slots, but it is real IO in a draw path — the fix is to resolve it on menu entry rather than per frame, which wants the menus to hold state they currently do not.
-- **The toolkit is under-adopted here, and the save system was the proof.** `persistence::slots` had the slot enumeration, app-data pathing, browser key qualification, versioning and migration hooks this project needed, and `save_system.rs` had reimplemented a thinner version against the lower-level `files`/`keys` API instead. Worth a sweep for the same shape elsewhere: `AutoSaveManager`, `SaveRoot` and `peek_slot_version` are all carried and all unused.
-- Data-driven stragglers: hardcoded imp claim delay, loose spawn-placement validation.
-- Decide on the GDD's determinism/replay aspiration while it is still cheap.
-- Fix `docs/gdd.md`'s stale "Bevy ECS" claim.
+- [ ] Run reproducible mission playtests covering first-wave preparation, starting gold, sustainable army size, and wave-10+ survival across difficulties. Tune wave pacing, level asymmetry, wages/needs, gem yield, sell refunds, and creature cost/mood outliers from recorded results.
+- [ ] Evaluate stacked hero-building destruction penalties and widespread fight-to-death authoring during those runs; update data and regression expectations to match the intended difficulty curve.
