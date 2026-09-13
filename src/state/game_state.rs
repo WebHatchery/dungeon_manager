@@ -53,6 +53,11 @@ pub struct GameState {
     pub game_over: bool,
     pub victory: bool,
 
+    /// Number of captured heroes converted into the dungeon's service during
+    /// this session. This is persisted so conversion objectives survive saves.
+    #[serde(default)]
+    pub conversion_count: u32,
+
     /// Notification system for game events
     pub notifications: crate::state::notifications::NotificationManager,
 
@@ -243,6 +248,7 @@ impl GameState {
             hero_base: crate::state::hero_base::HeroBase::new(game_data),
             game_over: false,
             victory: false,
+            conversion_count: 0,
             notifications: crate::state::notifications::NotificationManager::new(),
             dungeon_heart_health: game_data.config.dungeon.heart_max_health,
             attack_marker: None,
@@ -534,7 +540,7 @@ impl GameState {
         );
 
         // Progress prison conversions
-        crate::engine::prison_system::progress_prison_conversions(
+        self.conversion_count += crate::engine::prison_system::progress_prison_conversions(
             &mut self.entities,
             &self.room_manager,
             &mut self.notifications,

@@ -61,7 +61,7 @@ pub fn progress_prison_conversions(
     notifications: &mut NotificationManager,
     game_data: &GameData,
     dt: f32,
-) {
+) -> u32 {
     let active_torture_rooms = active_torture_rooms(entities);
     assign_prisoners_to_torture(entities, room_manager, game_data, &active_torture_rooms);
 
@@ -95,6 +95,7 @@ pub fn progress_prison_conversions(
         }
     }
 
+    let mut completed_count = 0;
     for (hero_id, kind) in conversions_to_process {
         let mut completed = false;
         let mut hero_name = String::new();
@@ -116,16 +117,19 @@ pub fn progress_prison_conversions(
         }
 
         if completed {
-            complete_conversion(
+            if complete_conversion(
                 hero_id,
                 kind,
                 entities,
                 notifications,
                 game_data,
                 &hero_name,
-            );
+            ) {
+                completed_count += 1;
+            }
         }
     }
+    completed_count
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -288,7 +292,7 @@ fn complete_conversion(
     notifications: &mut NotificationManager,
     game_data: &GameData,
     hero_name: &str,
-) {
+) -> bool {
     match kind {
         ConversionKind::Torture { .. } => {
             if let Some(entity) = entities.get_mut(hero_id) {
@@ -301,6 +305,7 @@ fn complete_conversion(
                     hero.current_goal = HeroGoal::RestAtSpawn(pos);
                     hero.current_path = None;
                     notifications.success(format!("{hero_name} converted to your side!"));
+                    return true;
                 }
             }
         }
@@ -322,9 +327,11 @@ fn complete_conversion(
                 );
                 entities.spawn_creature(pos, creature_state);
                 notifications.success("Captured hero rotted into a Skeleton!");
+                return true;
             }
         }
     }
+    false
 }
 
 #[cfg(test)]

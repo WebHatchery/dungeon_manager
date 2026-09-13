@@ -28,6 +28,28 @@ fn timed_scenario_objective_drives_victory() {
 }
 
 #[test]
+fn conversion_objective_uses_completed_conversion_count() {
+    let mut game_data = GameData::load().expect("game data should load");
+    add_test_scenario(
+        &mut game_data,
+        "conversion_win",
+        vec![ScenarioObjective::ConvertHeroes { amount: 2 }],
+    );
+    let mut state = GameState::new_for_scenario(&game_data, "conversion_win");
+
+    state.conversion_count = 2;
+    update_victory_and_defeat(&mut state, &game_data);
+
+    assert!(state.victory);
+    assert!(state
+        .scenario_runtime
+        .as_ref()
+        .unwrap()
+        .completed_objectives
+        .contains("convert_heroes:2"));
+}
+
+#[test]
 fn scenario_victory_completes_campaign_mission() {
     let mut game_data = GameData::load().expect("game data should load");
     add_test_scenario(

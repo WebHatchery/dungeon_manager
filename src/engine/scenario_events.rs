@@ -25,7 +25,7 @@ pub fn update_scenario_events(state: &mut GameState, game_data: &GameData) {
                 .as_ref()
                 .map(|runtime| runtime.fired_events.contains(&event.id))
                 .unwrap_or(false);
-            (!event.once || !already_fired) && trigger_matches(event, state)
+            (!event.once || !already_fired) && trigger_matches(event, state, game_data)
         })
         .cloned()
         .collect();
@@ -67,7 +67,7 @@ fn record_seen_heroes(state: &mut GameState) {
     }
 }
 
-fn trigger_matches(event: &ScenarioEvent, state: &GameState) -> bool {
+fn trigger_matches(event: &ScenarioEvent, state: &GameState, game_data: &GameData) -> bool {
     match &event.trigger {
         EventTrigger::TimeElapsed { seconds } => state.time_elapsed >= *seconds,
         EventTrigger::ObjectiveComplete { objective } => state
@@ -105,6 +105,20 @@ fn trigger_matches(event: &ScenarioEvent, state: &GameState) -> bool {
                 .unwrap_or(false);
             seen && !living_hero_ids(state).any(|id| id == hero)
         }
+        EventTrigger::TileEvent { event, owner } => state
+            .entities
+            .all()
+            .filter(|entity| entity.owner == *owner && entity.is_alive())
+            .filter_map(|entity| state.dungeon.get_tile(entity.pos))
+            .filter_map(|tile| game_data.tiles.get(&tile.tile_type))
+            .any(|tile_data| {
+                tile_data
+                    .special
+                    .as_ref()
+                    .and_then(|special| special.triggers_event.as_ref())
+                    .and_then(serde_json::Value::as_str)
+                    == Some(event.as_str())
+            }),
     }
 }
 

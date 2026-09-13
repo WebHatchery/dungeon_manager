@@ -132,6 +132,7 @@ pub enum ScenarioObjective {
     DestroyHeart { owner: OwnerId },
     SurviveTime { seconds: f32 },
     DestroyAllHeroBuildings,
+    ConvertHeroes { amount: u32 },
     GatherResource { resource: String, amount: i32 },
     Custom { id: String, description: String },
 }
@@ -144,6 +145,7 @@ impl ScenarioObjective {
             }
             ScenarioObjective::SurviveTime { .. } => "survive_time".to_string(),
             ScenarioObjective::DestroyAllHeroBuildings => "destroy_all_hero_buildings".to_string(),
+            ScenarioObjective::ConvertHeroes { amount } => format!("convert_heroes:{amount}"),
             ScenarioObjective::GatherResource { resource, amount } => {
                 format!("gather_resource:{resource}:{amount}")
             }
@@ -189,6 +191,9 @@ pub enum EventTrigger {
     HeroDefeated {
         hero: String,
     },
+    /// Fires when an entity of `owner` stands on a tile whose authored
+    /// `special.triggers_event` value matches `event`.
+    TileEvent { event: String, owner: OwnerId },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

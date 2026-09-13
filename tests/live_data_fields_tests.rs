@@ -54,9 +54,6 @@ const UNCONSUMED: &[&str] = &[
     "TileData::damage_per_second",
     "VisualData::fogged_sprite",
     "VisualData::animated",
-    // No event system exists, so nothing can fire the ancient_awakening that
-    // `ancient_rune_floor` declares.
-    "SpecialData::triggers_event",
     // Traps: magical door locking is unbuilt, and every trap is "pressure".
     "TrapEffects::lockable",
     "TrapEffects::trigger_type",

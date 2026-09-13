@@ -171,3 +171,51 @@ fn set_rule_event_updates_runtime_and_applies_side_effects() {
         .flat_map(|row| row.iter())
         .all(|tile| tile.fog_state == FogState::Visible));
 }
+
+#[test]
+fn authored_tile_event_fires_when_a_player_entity_steps_on_the_tile() {
+    let mut game_data = GameData::load().expect("game data should load");
+    let mut scenario = game_data
+        .scenarios
+        .get("whispers_in_the_circle")
+        .expect("scenario should exist")
+        .clone();
+    scenario.meta.id = "tile_event_test".to_string();
+    scenario.objectives = vec![ScenarioObjective::Custom {
+        id: "ancient_awakened".to_string(),
+        description: "Wake the ancient rune.".to_string(),
+    }];
+    scenario.events = vec![ScenarioEvent {
+        id: "wake_rune".to_string(),
+        trigger: EventTrigger::TileEvent {
+            event: "ancient_awakening".to_string(),
+            owner: OwnerId::Player,
+        },
+        actions: vec![EventAction::CompleteObjective {
+            objective: "ancient_awakened".to_string(),
+        }],
+        once: true,
+    }];
+    game_data
+        .scenarios
+        .insert(scenario.meta.id.clone(), scenario);
+
+    let mut state = GameState::new_for_scenario(&game_data, "tile_event_test");
+    let entity_id = state
+        .entities
+        .all()
+        .find(|entity| entity.owner == OwnerId::Player)
+        .map(|entity| entity.id)
+        .expect("scenario should start with a player entity");
+    let pos = state.entities.get(entity_id).unwrap().pos;
+    state.dungeon.get_tile_mut(pos).unwrap().tile_type = "ancient_rune_floor".to_string();
+
+    update_scenario_events(&mut state, &game_data);
+
+    assert!(state
+        .scenario_runtime
+        .as_ref()
+        .unwrap()
+        .completed_objectives
+        .contains("ancient_awakened"));
+}

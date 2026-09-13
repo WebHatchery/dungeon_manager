@@ -100,8 +100,8 @@
     },
     "objectives": [
       {
-        "type": "survive_time",
-        "seconds": 780.0
+        "type": "convert_heroes",
+        "amount": 3
       },
       {
         "type": "destroy_all_hero_buildings"
