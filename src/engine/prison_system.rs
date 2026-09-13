@@ -81,7 +81,10 @@ pub fn progress_prison_conversions(
         };
 
         match room.room_type.as_str() {
-            "prison" => conversions_to_process.push((hero_id, ConversionKind::Prison)),
+            "prison" => conversions_to_process.push((
+                hero_id,
+                ConversionKind::Prison { room_id: room.id },
+            )),
             "torture_chamber" if active_torture_rooms.contains_key(&room.id) => {
                 conversions_to_process.push((
                     hero_id,
@@ -104,7 +107,12 @@ pub fn progress_prison_conversions(
             if let Some(hero) = entity.as_hero_mut() {
                 hero_name = hero.hero_id.clone();
                 let rate = match kind {
-                    ConversionKind::Prison => skeleton_rate,
+                    ConversionKind::Prison { room_id } => prison_conversion_rate(
+                        room_manager,
+                        game_data,
+                        room_id,
+                        skeleton_rate,
+                    ),
                     ConversionKind::Torture { room_id, torturers } => {
                         torture_base_rate
                             * torture_power(room_manager, game_data, room_id)
@@ -134,7 +142,7 @@ pub fn progress_prison_conversions(
 
 #[derive(Debug, Clone, Copy)]
 enum ConversionKind {
-    Prison,
+    Prison { room_id: usize },
     Torture { room_id: usize, torturers: usize },
 }
 
@@ -285,6 +293,24 @@ fn torture_power(room_manager: &RoomManager, game_data: &GameData, room_id: usiz
         .max(1.0)
 }
 
+fn prison_conversion_rate(
+    room_manager: &RoomManager,
+    game_data: &GameData,
+    room_id: usize,
+    fallback: f32,
+) -> f32 {
+    room_manager
+        .rooms
+        .iter()
+        .find(|room| room.id == room_id)
+        .and_then(|room| {
+            crate::engine::room_validator::room_data_for(room, game_data)
+                .map(|data| data.effects.hero_conversion_rate)
+        })
+        .filter(|rate| rate.is_finite() && *rate > 0.0)
+        .unwrap_or(fallback)
+}
+
 fn complete_conversion(
     hero_id: EntityId,
     kind: ConversionKind,
@@ -309,7 +335,7 @@ fn complete_conversion(
                 }
             }
         }
-        ConversionKind::Prison => {
+        ConversionKind::Prison { .. } => {
             let pos = entities
                 .get(hero_id)
                 .map(|entity| entity.pos)

@@ -348,7 +348,10 @@ fn execute_work(
         .map(|m| creature_ai::calculate_work_efficiency(creature, m, game_data))
         .unwrap_or(1.0);
 
-    creature.work_timer += dt * room.efficiency * efficiency;
+    let productivity = crate::engine::room_validator::room_data_for(room, game_data)
+        .map(|data| crate::engine::room_validator::room_productivity_multiplier(room, data))
+        .unwrap_or(1.0);
+    creature.work_timer += dt * room.efficiency * productivity * efficiency;
 
     let work_threshold = game_data.config.task_execution.work_timer_threshold;
     if creature.work_timer >= work_threshold {
@@ -489,5 +492,15 @@ fn execute_research(
         .unwrap_or(1.0);
 
     let research_rate = game_data.config.task_execution.research_production_rate;
-    research_rate * room_rate * dt * efficiency
+    let productivity = room_manager
+        .rooms
+        .iter()
+        .find(|room| room.id == room_id)
+        .and_then(|room| crate::engine::room_validator::room_data_for(room, game_data))
+        .map(|data| {
+            let room = room_manager.rooms.iter().find(|room| room.id == room_id).unwrap();
+            crate::engine::room_validator::room_productivity_multiplier(room, data)
+        })
+        .unwrap_or(1.0);
+    research_rate * room_rate * productivity * dt * efficiency
 }

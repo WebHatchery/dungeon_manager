@@ -528,7 +528,7 @@ impl GameState {
         }
 
         // Generate food from hatcheries
-        self.generate_food_from_hatcheries(dt);
+        self.generate_food_from_hatcheries(dt, game_data);
 
         // Check for starving creatures that need to desert
         crate::engine::creature_needs::handle_creature_desertion(

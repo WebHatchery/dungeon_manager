@@ -17,6 +17,7 @@ fn active_room(id: usize, room_type: &str, tiles: &[TilePos]) -> Room {
 fn temple_sacrifices_dropped_player_creature_for_mana() {
     let game_data = GameData::load().expect("game data should load");
     let mut state = GameState::new_for_scenario(&game_data, "dark_beginnings");
+    state.room_manager.rooms.clear();
     let pos = TilePos::new(5, 5);
     state
         .room_manager
@@ -185,6 +186,34 @@ fn passive_mana_comes_from_the_effect_not_the_room_name() {
         .mana_generation_per_second;
     assert!(rate > 0.0, "the furnace should declare a passive rate");
     assert!(report.mana_generated > 0.0);
+}
+
+#[test]
+fn temple_prayer_adds_authored_mana_per_creature() {
+    let game_data = GameData::load().expect("game data should load");
+    let mut state = GameState::new_for_scenario(&game_data, "dark_beginnings");
+    state.room_manager.rooms.clear();
+    let pos = TilePos::new(5, 5);
+    state
+        .room_manager
+        .rooms
+        .push(active_room(994, "temple", &[pos]));
+    let monster_data = game_data.monsters.get("goblin").unwrap();
+    state.entities.spawn_creature(
+        pos,
+        CreatureState::new(
+            "goblin".to_string(),
+            1,
+            monster_data.stats.health,
+            monster_data.stats.mana,
+            7,
+        ),
+    );
+
+    let report = process_special_rooms(&mut state, &game_data, 1.0);
+    let effects = &game_data.rooms["temple"].effects;
+    let expected = effects.mana_generation_per_second + effects.prayer_mana_per_creature;
+    assert!((report.mana_generated - expected).abs() < 0.001);
 }
 
 #[test]

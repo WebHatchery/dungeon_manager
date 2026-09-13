@@ -80,6 +80,9 @@ pub struct EffectsData {
     /// Rate at which heroes are converted to creatures in prison (progress per second)
     #[serde(default)]
     pub hero_conversion_rate: f32,
+    /// Additional mana generated per player creature praying in this room.
+    #[serde(default)]
+    pub prayer_mana_per_creature: f32,
     #[serde(default)]
     pub corpse_storage: i32,
     /// Mana yielded per body rendered down, scaled by room efficiency. A room

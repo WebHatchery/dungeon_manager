@@ -139,8 +139,10 @@ impl GameState {
 
     /// Generate food from hatcheries based on their size
     /// Generate food from hatcheries based on their size
-    pub(super) fn generate_food_from_hatcheries(&mut self, dt: f32) {
-        let total_food_generated = self.room_manager.generate_food_from_hatcheries(dt);
+    pub(super) fn generate_food_from_hatcheries(&mut self, dt: f32, game_data: &GameData) {
+        let total_food_generated = self
+            .room_manager
+            .generate_food_from_hatcheries(dt, game_data);
         if total_food_generated > 0.0 {
             self.player
                 .add_resources_precise(0.0, 0.0, total_food_generated, 0.0);

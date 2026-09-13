@@ -583,9 +583,16 @@ fn decide_task_from_rooms(
     // If carrying gold, prioritize depositing
     if creature.gold_carried > game_data.config.creature_ai.gold_carrying_threshold {
         use crate::engine::room_validator;
-        if let Some((room_id, _)) =
-            room_validator::find_nearest_room(&room_manager.rooms, "treasury", creature_pos, 0.0)
-        {
+        if let Some((room_id, _)) = room_validator::find_nearest_room_for_creature(
+            &room_manager.rooms,
+            "treasury",
+            creature_pos,
+            0.0,
+            &creature.creature_id,
+            creature.level,
+            creature.mood,
+            game_data,
+        ) {
             return Some(Task::DepositGold(room_id));
         }
     }
@@ -606,9 +613,16 @@ fn decide_task_from_rooms(
 
     for (room_type, desire) in &monster_data.ai.room_desires {
         use crate::engine::room_validator;
-        if let Some((room_id, _)) =
-            room_validator::find_nearest_room(&room_manager.rooms, room_type, creature_pos, 0.0)
-        {
+        if let Some((room_id, _)) = room_validator::find_nearest_room_for_creature(
+            &room_manager.rooms,
+            room_type,
+            creature_pos,
+            0.0,
+            &creature.creature_id,
+            creature.level,
+            creature.mood,
+            game_data,
+        ) {
             // Find valid slot
             if let Some(room) = room_manager.rooms.iter().find(|r| r.id == room_id) {
                 if let Some(slot_pos) = find_available_work_slot(room, entities) {
@@ -631,10 +645,13 @@ fn decide_task_from_rooms(
         && creature.level < game_data.config.combat.max_creature_level
     {
         use crate::engine::room_validator;
-        if let Some((room_id, _)) = room_validator::find_nearest_room_for_task(
+        if let Some((room_id, _)) = room_validator::find_nearest_room_for_task_and_creature(
             &room_manager.rooms,
             "train",
             creature_pos,
+            &creature.creature_id,
+            creature.level,
+            creature.mood,
             game_data,
         ) {
             let task = Task::Train(room_id);
@@ -651,10 +668,13 @@ fn decide_task_from_rooms(
     // Add research — any room in the `research` family, so a second research
     // room is reachable without naming it here.
     use crate::engine::room_validator;
-    if let Some((room_id, _)) = room_validator::find_nearest_room_for_task(
+    if let Some((room_id, _)) = room_validator::find_nearest_room_for_task_and_creature(
         &room_manager.rooms,
         "research",
         creature_pos,
+        &creature.creature_id,
+        creature.level,
+        creature.mood,
         game_data,
     ) {
         let task = Task::Research(room_id);

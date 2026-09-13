@@ -22,8 +22,16 @@ pub fn try_satisfy_critical_need(
 
     if let Some(room_type) = need_data.satisfied_by.first() {
         use crate::engine::room_validator;
-        let (room_id, _) =
-            room_validator::find_nearest_room(&room_manager.rooms, room_type, creature_pos, 0.0)?;
+        let (room_id, _) = room_validator::find_nearest_room_for_creature(
+            &room_manager.rooms,
+            room_type,
+            creature_pos,
+            0.0,
+            &creature.creature_id,
+            creature.level,
+            creature.mood,
+            game_data,
+        )?;
 
         return match need_name.as_str() {
             "sleep" => Some(Task::Sleep(room_id)),

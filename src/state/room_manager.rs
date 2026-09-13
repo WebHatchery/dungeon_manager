@@ -87,13 +87,18 @@ impl RoomManager {
     }
 
     /// Generate food from hatcheries based on their size
-    pub fn generate_food_from_hatcheries(&self, dt: f32) -> f32 {
+    pub fn generate_food_from_hatcheries(&self, dt: f32, game_data: &GameData) -> f32 {
         let mut total_food_generated = 0.0;
 
         for room in &self.rooms {
             if room.room_type == "hatchery" && room.active {
                 // Each hatchery tile generates 1 food per second * efficiency
-                let food_rate = room.tiles.len() as f32 * room.efficiency;
+                let productivity = crate::engine::room_validator::room_data_for(room, game_data)
+                    .map(|data| {
+                        crate::engine::room_validator::room_productivity_multiplier(room, data)
+                    })
+                    .unwrap_or(1.0);
+                let food_rate = room.tiles.len() as f32 * room.efficiency * productivity;
                 total_food_generated += food_rate * dt;
             }
         }

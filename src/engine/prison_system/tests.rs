@@ -113,3 +113,42 @@ fn active_torture_room_pulls_prisoner_and_converts() {
     assert!(hero.is_converted);
     assert!(!hero.is_captured);
 }
+
+#[test]
+fn prison_uses_its_authored_conversion_rate() {
+    let mut game_data = GameData::load().expect("game data should load");
+    game_data.rooms.get_mut("prison").unwrap().effects.hero_conversion_rate = 1.0;
+    let mut entities = EntityManager::new();
+    let mut room_manager = RoomManager::new();
+    let mut notifications = NotificationManager::new();
+    room_manager
+        .rooms
+        .push(active_room(1, "prison", &[TilePos::new(1, 1)]));
+
+    let mut hero = HeroState::new(
+        "knight".to_string(),
+        1,
+        100.0,
+        10.0,
+        TilePos::new(1, 1),
+        1.0,
+        3,
+    );
+    hero.is_captured = true;
+    hero.health = 10.0;
+    entities.spawn_hero(TilePos::new(1, 1), hero);
+
+    assert_eq!(
+        progress_prison_conversions(
+            &mut entities,
+            &room_manager,
+            &mut notifications,
+            &game_data,
+            1.0,
+        ),
+        1
+    );
+    assert!(entities
+        .creatures()
+        .any(|(_, creature)| creature.creature_id == "skeleton"));
+}

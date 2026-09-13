@@ -54,3 +54,42 @@ fn test_room_center() {
     assert_eq!(center.x, 1);
     assert_eq!(center.y, 0);
 }
+
+#[test]
+fn authored_room_productivity_scales_per_tile() {
+    let game_data = GameData::load().expect("game data should load");
+    let room = Room::new(
+        1,
+        "hatchery".to_string(),
+        [TilePos::new(0, 0), TilePos::new(1, 0), TilePos::new(0, 1)]
+            .into_iter()
+            .collect(),
+        Vec::new(),
+    );
+    let mut room_data = game_data.rooms["hatchery"].clone();
+    room_data.scaling.per_tile_multiplier = 1.1;
+
+    let multiplier = room_productivity_multiplier(&room, &room_data);
+    assert!((multiplier - 1.331).abs() < 0.001);
+}
+
+#[test]
+fn room_entry_rules_filter_forbidden_and_underlevel_creatures() {
+    let game_data = GameData::load().expect("game data should load");
+    let room = Room::new(
+        1,
+        "training_room".to_string(),
+        [TilePos::new(0, 0)].into_iter().collect(),
+        Vec::new(),
+    );
+
+    assert!(!creature_can_enter_room(
+        &room, "imp", 10, 50.0, &game_data
+    ));
+    assert!(!creature_can_enter_room(
+        &room, "goblin", 1, 50.0, &game_data
+    ));
+    assert!(creature_can_enter_room(
+        &room, "goblin", 2, 50.0, &game_data
+    ));
+}

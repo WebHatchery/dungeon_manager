@@ -37,13 +37,9 @@ const UNCONSUMED: &[&str] = &[
     // Rooms still appear the instant they are paid for, rather than taking
     // `construction_time` to raise.
     "BuildData::construction_time",
-    // Shape scaling — the "room efficiency mechanics" item.
-    "ScalingData::per_tile_multiplier",
     // Room AI hints beyond `task_type`/`max_creatures`.
     "AIData::forbidden_creatures",
     "AIData::entry_conditions",
-    // Prison hero->creature conversion is not built.
-    "EffectsData::hero_conversion_rate",
     // Per-room wall art is authored but never generated or drawn.
     "RoomVisualData::wall_sprite",
     // Lighting and atmosphere pass.

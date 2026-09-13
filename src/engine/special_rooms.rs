@@ -139,10 +139,21 @@ fn generate_room_mana(state: &GameState, game_data: &GameData, dt: f32) -> f32 {
         .filter(|room| room.active)
         .filter_map(|room| {
             crate::engine::room_validator::room_data_for(room, game_data).map(|room_data| {
-                room.tiles.len() as f32
-                    * room.efficiency
-                    * room_data.effects.mana_generation_per_second
-                    * dt
+                let passive = room.tiles.len() as f32
+                    * room_data.effects.mana_generation_per_second;
+                let praying_creatures = state
+                    .entities
+                    .all()
+                    .filter(|entity| {
+                        entity.owner == OwnerId::Player
+                            && entity.as_creature().is_some()
+                            && room.tiles.contains(&entity.pos)
+                    })
+                    .count() as f32;
+                let prayer = praying_creatures * room_data.effects.prayer_mana_per_creature;
+                let productivity =
+                    crate::engine::room_validator::room_productivity_multiplier(room, room_data);
+                (passive + prayer) * room.efficiency * productivity * dt
             })
         })
         .sum()
@@ -164,8 +175,12 @@ fn burn_corpses_in_furnaces(state: &mut GameState, game_data: &GameData) -> (usi
         .iter()
         .filter(|room| room.active)
         .filter_map(|room| {
-            crate::engine::room_validator::room_data_for(room, game_data)
-                .map(|data| data.effects.mana_per_corpse * room.efficiency)
+                crate::engine::room_validator::room_data_for(room, game_data)
+                .map(|data| {
+                    data.effects.mana_per_corpse
+                        * room.efficiency
+                        * crate::engine::room_validator::room_productivity_multiplier(room, data)
+                })
         })
         .fold(0.0f32, f32::max);
 
@@ -349,7 +364,14 @@ fn progress_scavenger_rooms(
         let room_efficiency = state
             .room_manager
             .get_room_at(pos)
-            .map(|room| room.efficiency.max(0.25))
+            .map(|room| {
+                let productivity = crate::engine::room_validator::room_data_for(room, game_data)
+                    .map(|data| {
+                        crate::engine::room_validator::room_productivity_multiplier(room, data)
+                    })
+                    .unwrap_or(1.0);
+                room.efficiency.max(0.25) * productivity
+            })
             .unwrap_or(1.0);
         let progress = state
             .player

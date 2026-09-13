@@ -191,7 +191,17 @@ pub fn calculate_efficiency(room: &Room, grid: &Grid, game_data: &GameData) -> f
         return 1.0;
     }
 
-    (secured_segments / total_perimeter_segments).max(0.25)
+    let enclosure = (secured_segments / total_perimeter_segments).max(0.25);
+    // Enclosure is only half of a room's output: the authored shape rules
+    // already calculate compactness, corridor, and size quality, so feed that
+    // result into production instead of displaying quality that gameplay
+    // ignores.
+    let shape_factor = game_data
+        .rooms
+        .get(crate::data::rooms::room_data_id(&room.room_type))
+        .map(|room_data| (calculate_room_quality(room, room_data) / 100.0).clamp(0.25, 1.0))
+        .unwrap_or(1.0);
+    (enclosure * shape_factor).clamp(0.25, 1.0)
 }
 
 /// Check if a perimeter position is secured (by wall, door, or map edge)
@@ -436,6 +446,20 @@ pub fn calculate_room_quality(room: &Room, room_data: &RoomData) -> f32 {
     quality
 }
 
+/// Scale room work by the authored per-tile productivity factor.
+///
+/// A value of `1.0` preserves the baseline. Applying the factor once per tile
+/// keeps large rooms meaningful while the upper bound prevents malformed or
+/// experimental content from producing an unbounded economy multiplier.
+pub fn room_productivity_multiplier(room: &Room, room_data: &RoomData) -> f32 {
+    room_data
+        .scaling
+        .per_tile_multiplier
+        .max(0.0)
+        .powf(room.tiles.len() as f32)
+        .clamp(0.0, 4.0)
+}
+
 /// Find the best room of a given type near a position
 /// Returns (room_index, distance) or None if no suitable room found
 pub fn find_nearest_room(
@@ -469,6 +493,98 @@ pub fn find_nearest_room(
         }
     }
 
+    best
+}
+
+/// Whether a creature satisfies the room's authored entry restrictions.
+///
+/// The shipped data uses two condition keys: `min_level` and `mood_below`.
+/// Unknown keys are left to content validation rather than silently becoming
+/// a new runtime rule.
+pub fn creature_can_enter_room(
+    room: &Room,
+    creature_id: &str,
+    creature_level: u32,
+    creature_mood: f32,
+    game_data: &GameData,
+) -> bool {
+    let Some(room_data) = room_data_for(room, game_data) else {
+        return false;
+    };
+    if room_data
+        .ai
+        .forbidden_creatures
+        .iter()
+        .any(|forbidden| forbidden == creature_id)
+    {
+        return false;
+    }
+
+    if let Some(min_level) = room_data
+        .ai
+        .entry_conditions
+        .get("min_level")
+        .and_then(serde_json::Value::as_u64)
+    {
+        if creature_level < min_level as u32 {
+            return false;
+        }
+    }
+
+    if let Some(mood_below) = room_data
+        .ai
+        .entry_conditions
+        .get("mood_below")
+        .and_then(serde_json::Value::as_f64)
+    {
+        if !creature_mood.is_finite() || creature_mood >= mood_below as f32 {
+            return false;
+        }
+    }
+
+    true
+}
+
+/// Nearest active room of a given type that a particular creature may enter.
+pub fn find_nearest_room_for_creature(
+    rooms: &[Room],
+    room_type: &str,
+    pos: TilePos,
+    min_quality: f32,
+    creature_id: &str,
+    creature_level: u32,
+    creature_mood: f32,
+    game_data: &GameData,
+) -> Option<(usize, f32)> {
+    let mut best: Option<(usize, f32)> = None;
+    for room in rooms.iter() {
+        let room_type_matches = room.room_type == room_type
+            || room_data_for(room, game_data)
+                .is_some_and(|data| data.id == room_type);
+        if !room.active
+            || room.quality < min_quality
+            || !room_type_matches
+            || !creature_can_enter_room(
+                room,
+                creature_id,
+                creature_level,
+                creature_mood,
+                game_data,
+            )
+        {
+            continue;
+        }
+
+        let center = room.get_center();
+        let dx = (center.x - pos.x) as f32;
+        let dy = (center.y - pos.y) as f32;
+        let distance = (dx * dx + dy * dy).sqrt();
+        match best {
+            None => best = Some((room.id, distance)),
+            Some((_, best_dist)) if distance < best_dist => best = Some((room.id, distance)),
+            _ => {}
+        }
+    }
     best
 }
 
@@ -652,6 +768,46 @@ pub fn find_nearest_room_for_task(
         }
     }
 
+    best
+}
+
+/// Task-family room lookup with the same creature entry restrictions as the
+/// room-type lookup above.
+pub fn find_nearest_room_for_task_and_creature(
+    rooms: &[Room],
+    task_type: &str,
+    pos: TilePos,
+    creature_id: &str,
+    creature_level: u32,
+    creature_mood: f32,
+    game_data: &GameData,
+) -> Option<(usize, f32)> {
+    let mut best: Option<(usize, f32)> = None;
+    for room in rooms.iter() {
+        let matches = room.active
+            && room_data_for(room, game_data)
+                .is_some_and(|data| data.ai.task_type == task_type)
+            && creature_can_enter_room(
+                room,
+                creature_id,
+                creature_level,
+                creature_mood,
+                game_data,
+            );
+        if !matches {
+            continue;
+        }
+
+        let center = room.get_center();
+        let dx = (center.x - pos.x) as f32;
+        let dy = (center.y - pos.y) as f32;
+        let distance = (dx * dx + dy * dy).sqrt();
+        match best {
+            None => best = Some((room.id, distance)),
+            Some((_, best_dist)) if distance < best_dist => best = Some((room.id, distance)),
+            _ => {}
+        }
+    }
     best
 }
 
