@@ -1,0 +1,9 @@
+{
+  "id": "example_pack",
+  "name": "Example Content Pack",
+  "version": "1.0.0",
+  "priority": 0,
+  "data": {},
+  "assets": [],
+  "maps": []
+}
