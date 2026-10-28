@@ -133,6 +133,7 @@ pub enum ScenarioObjective {
     SurviveTime { seconds: f32 },
     DestroyAllHeroBuildings,
     ConvertHeroes { amount: u32 },
+    SacrificeCreatures { amount: u32 },
     GatherResource { resource: String, amount: i32 },
     Custom { id: String, description: String },
 }
@@ -146,6 +147,9 @@ impl ScenarioObjective {
             ScenarioObjective::SurviveTime { .. } => "survive_time".to_string(),
             ScenarioObjective::DestroyAllHeroBuildings => "destroy_all_hero_buildings".to_string(),
             ScenarioObjective::ConvertHeroes { amount } => format!("convert_heroes:{amount}"),
+            ScenarioObjective::SacrificeCreatures { amount } => {
+                format!("sacrifice_creatures:{amount}")
+            }
             ScenarioObjective::GatherResource { resource, amount } => {
                 format!("gather_resource:{resource}:{amount}")
             }

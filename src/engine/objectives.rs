@@ -69,6 +69,7 @@ fn objective_is_complete(
         ScenarioObjective::SurviveTime { seconds } => state.time_elapsed >= *seconds,
         ScenarioObjective::DestroyAllHeroBuildings => hero_buildings_destroyed(state, game_data),
         ScenarioObjective::ConvertHeroes { amount } => state.conversion_count >= *amount,
+        ScenarioObjective::SacrificeCreatures { amount } => state.sacrifice_count >= *amount,
         ScenarioObjective::GatherResource { resource, amount } => {
             current_resource_amount(state, resource) >= *amount
         }

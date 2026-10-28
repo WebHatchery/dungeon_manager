@@ -95,6 +95,7 @@ pub fn sacrifice_creature_at(
     };
 
     state.entities.remove(entity_id);
+    state.sacrifice_count += 1;
     state.player.add_resources_precise(0.0, mana, 0.0, 0.0);
     state
         .notifications

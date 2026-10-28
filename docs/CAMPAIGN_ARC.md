@@ -52,7 +52,7 @@ content — new *content* is roadmap §1 roster work, tracked separately):
 | **Hero buildings** (9) | town_hall, barracks, archery_range, church, mage_tower, stable, armory, hero_wall, hero_gate |
 
 **Engine primitives the events lean on** (all present in `data/scenario.rs`):
-- Objective types: `survive_time`, `destroy_heart`, `destroy_all_hero_buildings`, `gather_resource`, `custom`.
+- Objective types: `survive_time`, `destroy_heart`, `destroy_all_hero_buildings`, `gather_resource`, `convert_heroes`, `sacrifice_creatures`, `custom`.
 - Triggers: `time_elapsed`, `objective_complete`, `room_claimed`, `action_point_reached`, `dungeon_breached`.
 - Actions: `unlock_room`, `unlock_spell`, `unlock_trap`, `spawn_creature`, `spawn_hero_party`, `set_rule`, `complete_objective`.
 - Hero-party behaviors: `attack_dungeon_heart`, `defend_location`, `steal_gold`, `explore`.

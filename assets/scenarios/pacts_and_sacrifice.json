@@ -118,6 +118,10 @@
         "seconds": 900.0
       },
       {
+        "type": "sacrifice_creatures",
+        "amount": 3
+      },
+      {
         "type": "destroy_all_hero_buildings"
       }
     ],

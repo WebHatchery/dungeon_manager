@@ -58,6 +58,11 @@ pub struct GameState {
     #[serde(default)]
     pub conversion_count: u32,
 
+    /// Creatures offered at a temple or ritual circle this session. Persisted
+    /// so sacrifice objectives survive saves.
+    #[serde(default)]
+    pub sacrifice_count: u32,
+
     /// Notification system for game events
     pub notifications: crate::state::notifications::NotificationManager,
 
@@ -255,6 +260,7 @@ impl GameState {
             game_over: false,
             victory: false,
             conversion_count: 0,
+            sacrifice_count: 0,
             notifications: crate::state::notifications::NotificationManager::new(),
             dungeon_heart_health: game_data.config.dungeon.heart_max_health,
             attack_marker: None,
