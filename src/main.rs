@@ -289,7 +289,7 @@ impl Game {
             "missionselect" => {
                 self.phase = match self.game_data.as_ref() {
                     Some(data) if data.campaigns.contains_key("deep_dominion") => {
-                        let progress = crate::data::campaign::CampaignProgress::new(
+                        let progress = crate::state::campaign_store::load_or_new(
                             data.campaigns.get("deep_dominion").unwrap(),
                         );
                         GamePhase::MissionSelect(progress)

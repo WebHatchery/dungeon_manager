@@ -215,6 +215,7 @@ fn complete_active_campaign_mission(state: &mut GameState, game_data: &GameData)
 
     let mission_id = progress.active_mission.clone();
     progress.complete_mission(campaign, &mission_id);
+    crate::state::campaign_store::save(progress);
 }
 
 #[cfg(test)]

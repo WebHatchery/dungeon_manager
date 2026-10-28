@@ -1,4 +1,5 @@
 pub mod camera_state;
+pub mod campaign_store;
 mod campaign_flow;
 mod combat_tick;
 pub mod drag_selection;

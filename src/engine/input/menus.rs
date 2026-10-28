@@ -121,7 +121,7 @@ pub(super) fn handle_main_menu(
             if let Some(campaign) = data.campaigns.get("deep_dominion") {
                 // Open the mission-select screen so the player can pick which
                 // unlocked mission to play (notably the M7 branch).
-                let progress = crate::data::campaign::CampaignProgress::new(campaign);
+                let progress = crate::state::campaign_store::load_or_new(campaign);
                 *phase = GamePhase::MissionSelect(progress);
             } else {
                 let game_state = GameState::new_with_map_type(
