@@ -251,6 +251,33 @@ handled as above).
 
 ---
 
+### Final progression rules (authoritative)
+
+Each mission's `availability` block is the whole truth for that mission; nothing
+carries over implicitly except the campaign's `persistent_unlocks`. The rules the
+authored scenarios follow:
+
+- **Main path is cumulative.** Rooms, spells, traps and creatures a mission grants stay
+  unlocked in later missions, except for the deliberate themed exceptions below.
+- **Themed exceptions.** M5 *Whispers* withholds the prison/torture chamber and gates
+  `lightning_strike` behind an in-mission event; M7a/M7b trade away each other's signature
+  room (graveyard vs temple) and units; M8 *Iron Siege* drops both branch rooms and
+  re-merges on the shared roster.
+- **Temple and undead.** The temple (sacrifice) exists only in M7b and the graveyard
+  (vampires) only in M7a. Later missions do not re-offer either, so neither branch is
+  permanently out-built by the other.
+- **Late missions are full-roster.** M9 offers the prison for conversions and the
+  offensive spells; M10 offers `corrupt_land` and `possess` as well as the rest of the
+  spell list.
+- **Tech.** Every mission starts with the same four research items
+  (`training_tech`, `trap_tech`, `ritual_tech`, `prison_tech`); rewards come from
+  availability, not from carried-over research.
+- **Objective primitives.** Win conditions use `survive_time`, `destroy_all_hero_buildings`,
+  `gather_resource`, `convert_heroes`, `sacrifice_creatures`, `destroy_heart` (player or
+  rival keeper), and `custom` completed by a `complete_objective` event. Timeouts use a
+  `time_elapsed` event with a `fail_mission` action. A razed rival heart ends that
+  keeper's AI.
+
 ## 7. Mechanic-introduction order (at a glance)
 
 | Mission | Rooms | Creatures | Spells | Traps | Tech | Hero threat introduced |
