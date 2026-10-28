@@ -272,6 +272,10 @@ authored scenarios follow:
 - **Tech.** Every mission starts with the same four research items
   (`training_tech`, `trap_tech`, `ritual_tech`, `prison_tech`); rewards come from
   availability, not from carried-over research.
+- **Assault routes.** Every authored map with a hero base has at least one `hero_gate`, and
+  every hero gate, town hall and rival heart is connected to the player's heart by
+  non-bedrock tiles, so each can be reached by digging. `destroy_all_hero_buildings`
+  counts the whole walled ring, so walls must fall as well as the buildings.
 - **Objective primitives.** Win conditions use `survive_time`, `destroy_all_hero_buildings`,
   `gather_resource`, `convert_heroes`, `sacrifice_creatures`, `destroy_heart` (player or
   rival keeper), and `custom` completed by a `complete_objective` event. Timeouts use a

@@ -21,7 +21,6 @@ notes and obsolete design promises are intentionally not retained here.
 - [ ] Make mutation progress/results inspectable in creature UI, including contributing rooms and transformation feedback.
 - [ ] Add map-quality checks and staged large-map generation; verify scouting visibility across terrain, entities, and minimap, including the rival-lair leak.
 - [ ] Extend hand interactions to gold/objects and document concrete build-or-cut scope for possession, surface raids, meta-progression, trade/hiring, corpses, spell modifiers, and gamepad navigation.
-- [ ] Reconcile hero-base assault routes with authored progression (tech rewards and temple/undead availability are documented in `docs/CAMPAIGN_ARC.md` under "Final progression rules").
 
 ## Presentation and balance
 
