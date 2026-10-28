@@ -166,7 +166,7 @@
           { "action": "spawn_hero_party", "party": "town_sortie_3", "x": 24, "y": 11 }
         ],
         "once": true
-      }
+      },{"id":"the_town_endures","trigger":{"type":"time_elapsed","seconds":1500.0},"actions":[{"action":"fail_mission","message":"DEFEAT! The town held out too long and the surface has rallied."}],"once":true}
     ],
     "hero_parties": [
       {

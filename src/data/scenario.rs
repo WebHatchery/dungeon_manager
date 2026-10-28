@@ -237,6 +237,11 @@ pub enum EventAction {
     CompleteObjective {
         objective: String,
     },
+    /// Ends the mission in defeat — the lose-on-timeout primitive when paired
+    /// with a `time_elapsed` trigger. Ignored once the mission is already over.
+    FailMission {
+        message: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

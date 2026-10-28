@@ -195,6 +195,13 @@ fn apply_action(state: &mut GameState, game_data: &GameData, action: &EventActio
                 runtime.mark_objective_complete(objective);
             }
         }
+        EventAction::FailMission { message } => {
+            if !state.game_over {
+                state.game_over = true;
+                state.victory = false;
+                state.notifications.danger(message.clone());
+            }
+        }
     }
 }
 
