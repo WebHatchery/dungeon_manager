@@ -365,7 +365,7 @@ impl GameRenderer {
         crate::ui::minimap::draw_minimap(state, game_data);
 
         // Tutorial objective panel
-        if let Some(data) = game_data {
+        if let Some(data) = game_data.as_ref().filter(|_| !state.game_over) {
             crate::ui::tutorial::draw_tutorial_panel(state, data);
             crate::ui::mission_objectives::draw_mission_objectives(state, data);
         }
