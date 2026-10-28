@@ -9,7 +9,7 @@
         "The deep is not big enough for three hearts. Two other keepers scrabble for the same veins,",
         "and neither will stop digging until the others are cold. This is a war of tempo, not of walls —",
         "expand faster, mine deeper, and field a horde big enough to weather two enemies at once.",
-        "Endure their raids, out-earn them both, and leave only your heart beating in the mountain."
+        "Endure their raids, out-earn them both, then storm each rival heart until only yours beats in the mountain."
       ]
     },
     "map": {
@@ -131,13 +131,12 @@
     },
     "objectives": [
       {
-        "type": "survive_time",
-        "seconds": 900.0
+        "type": "destroy_heart",
+        "owner": { "rival_keeper": 1 }
       },
       {
-        "type": "gather_resource",
-        "resource": "gold",
-        "amount": 8000
+        "type": "destroy_heart",
+        "owner": { "rival_keeper": 2 }
       }
     ],
     "events": [],

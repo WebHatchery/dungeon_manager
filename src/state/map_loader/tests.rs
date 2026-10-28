@@ -404,10 +404,10 @@ fn two_kings_boots_with_two_hostile_rivals_and_a_clear_player_heart() {
         Ownership::Player
     );
     assert!(state.dungeon_heart_health > 0.0);
-    // No hero base in this pure keeper duel; win is survive + out-earn.
+    // No hero base in this pure keeper duel; win is razing both rival hearts.
     assert!(!state.hero_base.enabled);
     let scenario = game_data.scenarios.get("two_kings").unwrap();
-    assert_eq!(scenario.objectives.len(), 2, "survive + gather-gold");
+    assert_eq!(scenario.objectives.len(), 2, "one destroy_heart per rival");
 }
 
 #[test]

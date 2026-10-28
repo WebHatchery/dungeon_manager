@@ -208,6 +208,8 @@ pub fn load_map(
         }
     }
 
+    spawn_rival_heart_structures(&dungeon, entities, game_data);
+
     Ok(dungeon)
 }
 
@@ -319,3 +321,26 @@ fn default_level() -> u32 {
 
 #[cfg(test)]
 mod tests;
+
+/// Give each rival keeper's dungeon-heart tile an HP-bearing structure so a
+/// `destroy_heart` objective against that rival can be fought for and won. The
+/// player's own heart is tracked separately as `dungeon_heart_health`.
+fn spawn_rival_heart_structures(
+    dungeon: &Dungeon,
+    entities: &mut EntityManager,
+    game_data: &GameData,
+) {
+    let max_health = game_data.config.dungeon.heart_max_health;
+    for tile in dungeon.grid.iter().flatten() {
+        if tile.tile_type == "dungeon_heart"
+            && tile.owner.is_dungeon_keeper()
+            && !tile.owner.is_player_controlled()
+        {
+            entities.spawn_structure_for_owner(
+                tile.pos,
+                StructureState::new("dungeon_heart".to_string(), max_health),
+                tile.owner.clone(),
+            );
+        }
+    }
+}
