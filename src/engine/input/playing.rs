@@ -84,6 +84,9 @@ fn handle_slot_browser(state: &mut GameState) {
     }
 }
 
+/// How long the end-of-mission screen ignores Enter/Space after it appears.
+const GAME_OVER_KEY_DELAY_SECONDS: f64 = 0.8;
+
 /// Handle all input for the `Playing` phase. Returns `true` when the player
 /// asked to return to the main menu.
 pub(super) fn handle_playing(
@@ -102,13 +105,19 @@ pub(super) fn handle_playing(
 ) -> bool {
     // Handle Game Over Input
     if state.game_over {
+        let seen_at = *state
+            .game_over_seen_at
+            .get_or_insert_with(macroquad::time::get_time);
+        let keys_ready = macroquad::time::get_time() - seen_at >= GAME_OVER_KEY_DELAY_SECONDS;
         if state.victory && state.has_pending_campaign_mission(game_data) {
             let next_rect = crate::ui::menu_layout::game_over_next_mission();
             let mouse_pos = mouse_position();
             let next_clicked = is_mouse_button_pressed(MouseButton::Left)
                 && next_rect.contains(vec2(mouse_pos.0, mouse_pos.1));
 
-            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) || next_clicked {
+            let next_key =
+                keys_ready && (is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space));
+            if next_key || next_clicked {
                 if let Some(next_state) = state.start_pending_campaign_mission(game_data) {
                     *state = next_state;
                     *interaction_mode = InteractionMode::None;
@@ -125,7 +134,9 @@ pub(super) fn handle_playing(
             let mouse_pos = mouse_position();
             let retry_clicked = is_mouse_button_pressed(MouseButton::Left)
                 && retry_rect.contains(vec2(mouse_pos.0, mouse_pos.1));
-            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) || retry_clicked {
+            let retry_key =
+                keys_ready && (is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space));
+            if retry_key || retry_clicked {
                 if let Some(retry_state) = state.retry_campaign_mission(game_data) {
                     *state = retry_state;
                     *interaction_mode = InteractionMode::None;

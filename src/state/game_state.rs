@@ -117,6 +117,12 @@ pub struct GameState {
     /// render loop.
     #[serde(skip)]
     pub save_availability_dirty: bool,
+
+    /// Wall-clock time the end-of-mission screen was first seen. Keyboard
+    /// shortcuts on that screen wait briefly after it so a player still
+    /// pressing keys when the heart falls does not skip the result.
+    #[serde(skip)]
+    pub game_over_seen_at: Option<f64>,
 }
 
 impl GameState {
@@ -276,6 +282,7 @@ impl GameState {
             tutorial: crate::state::tutorial::TutorialState::default(),
             difficulty: crate::state::settings::Difficulty::default(),
             save_availability_dirty: false,
+            game_over_seen_at: None,
         };
 
         // Recalculate max gold and other room-based stats
