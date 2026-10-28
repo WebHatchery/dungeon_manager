@@ -33,6 +33,11 @@ pub struct ScenarioRuntimeState {
     /// actually appeared.
     #[serde(default)]
     pub seen_hero_ids: HashSet<String>,
+    /// Owner labels of keeper hearts seen alive at least once. Razed hearts
+    /// are removed from the entity list, so this is how `DestroyHeart`
+    /// tells "razed" from "never existed".
+    #[serde(default)]
+    pub seen_heart_owners: HashSet<String>,
     #[serde(default)]
     pub active_rules: ScenarioRules,
 }
@@ -60,6 +65,7 @@ impl ScenarioRuntimeState {
             unlocked_creatures,
             reached_action_points: HashSet::new(),
             seen_hero_ids: HashSet::new(),
+            seen_heart_owners: HashSet::new(),
             active_rules: scenario.rules.clone(),
         }
     }

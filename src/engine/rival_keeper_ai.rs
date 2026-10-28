@@ -81,22 +81,7 @@ pub fn update_rival_keeper_ai(state: &mut GameState, game_data: &GameData, dt: f
 /// building, reinforcing and raiding. Keepers with no heart structure (maps
 /// that never placed one) are never considered fallen.
 fn heart_has_fallen(state: &GameState, owner: &OwnerId) -> bool {
-    let mut hearts = state.entities.all().filter(|entity| {
-        entity.owner == *owner
-            && matches!(
-                &entity.entity_type,
-                crate::state::entities::EntityType::Structure(structure)
-                    if structure.building_id == "dungeon_heart"
-            )
-    });
-    let mut saw_heart = false;
-    for heart in hearts.by_ref() {
-        saw_heart = true;
-        if heart.is_alive() {
-            return false;
-        }
-    }
-    saw_heart
+    crate::engine::objectives::owner_heart_destroyed(owner, state)
 }
 
 fn execute_keeper_decision(state: &mut GameState, game_data: &GameData, keeper_index: usize) {

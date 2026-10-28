@@ -9,6 +9,8 @@ pub fn update_victory_and_defeat(state: &mut GameState, game_data: &GameData) {
         return;
     }
 
+    record_living_hearts(state);
+
     if state.dungeon_heart_health <= 0.0 {
         set_defeat(state, "DEFEAT! Your Dungeon Heart was destroyed!");
         return;
@@ -114,28 +116,47 @@ fn objective_is_complete(
     }
 }
 
-fn owner_heart_destroyed(owner: &OwnerId, state: &GameState) -> bool {
+pub(crate) fn owner_heart_destroyed(owner: &OwnerId, state: &GameState) -> bool {
     if owner.is_player_controlled() {
         return state.dungeon_heart_health <= 0.0;
     }
 
-    let matching_hearts = state.entities.all().filter(|entity| {
+    let mut hearts = state.entities.all().filter(|entity| {
         entity.owner == *owner
             && matches!(
                 &entity.entity_type,
                 EntityType::Structure(structure) if structure.building_id == "dungeon_heart"
             )
     });
-
-    let mut saw_heart = false;
-    for entity in matching_hearts {
-        saw_heart = true;
-        if entity.is_alive() {
-            return false;
-        }
+    if hearts.any(|entity| entity.is_alive()) {
+        return false;
     }
 
-    saw_heart
+    // Razed hearts leave the entity list, so "razed" means: it was seen alive
+    // once and nothing alive remains.
+    state
+        .scenario_runtime
+        .as_ref()
+        .map(|runtime| runtime.seen_heart_owners.contains(&owner.label()))
+        .unwrap_or(false)
+}
+
+fn record_living_hearts(state: &mut GameState) {
+    let living: Vec<String> = state
+        .entities
+        .all()
+        .filter(|entity| {
+            entity.is_alive()
+                && matches!(
+                    &entity.entity_type,
+                    EntityType::Structure(structure) if structure.building_id == "dungeon_heart"
+                )
+        })
+        .map(|entity| entity.owner.label())
+        .collect();
+    if let Some(runtime) = &mut state.scenario_runtime {
+        runtime.seen_heart_owners.extend(living);
+    }
 }
 
 fn hero_buildings_destroyed(state: &GameState, game_data: &GameData) -> bool {
