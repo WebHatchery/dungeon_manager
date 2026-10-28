@@ -62,6 +62,7 @@ fn scenario_victory_completes_campaign_mission() {
         name: "Test Campaign".to_string(),
         description: String::new(),
         starting_mission: "m1".to_string(),
+        epilogue: Vec::new(),
         persistent_unlocks: CampaignUnlocks::default(),
         missions: vec![
             CampaignMission {
@@ -110,6 +111,7 @@ fn campaign_start_applies_persistent_content_unlocks() {
         name: "Unlock Campaign".to_string(),
         description: String::new(),
         starting_mission: "m1".to_string(),
+        epilogue: Vec::new(),
         persistent_unlocks: CampaignUnlocks {
             rooms: vec!["workshop".to_string()],
             spells: vec!["lightning_strike".to_string()],

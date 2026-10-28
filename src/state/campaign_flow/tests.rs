@@ -21,6 +21,7 @@ fn victory_can_start_next_campaign_mission_with_progress() {
         name: "Two Step".to_string(),
         description: String::new(),
         starting_mission: "m1".to_string(),
+        epilogue: Vec::new(),
         persistent_unlocks: CampaignUnlocks {
             rooms: vec!["workshop".to_string()],
             ..CampaignUnlocks::default()

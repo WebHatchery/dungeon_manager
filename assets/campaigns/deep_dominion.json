@@ -4,6 +4,11 @@
     "name": "Deep Dominion",
     "description": "A campaign about growing from a hidden dungeon heart into a realm-spanning dark empire.",
     "starting_mission": "dark_beginnings",
+    "epilogue": [
+      "The last light is out. The sunlit kingdoms kneel to a heart that beats beneath the mountain.",
+      "Where a lone dungeon once hid in the dark, an empire of tunnels, chambers and hungry things now stands.",
+      "The deep is yours. Deep, and forever."
+    ],
     "persistent_unlocks": {
       "rooms": [
         "lair",

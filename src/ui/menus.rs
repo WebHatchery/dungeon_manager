@@ -360,8 +360,11 @@ pub fn draw_game_over_screen(state: &GameState, game_data: Option<&GameData>) {
         && game_data
             .map(|data| state.has_pending_campaign_mission(data))
             .unwrap_or(false);
+    let epilogue = game_data.and_then(|data| state.campaign_epilogue(data));
     let subtitle = if state.victory {
-        if has_next_mission {
+        if epilogue.is_some() {
+            "The dominion is yours."
+        } else if has_next_mission {
             "Mission complete."
         } else {
             "The campaign mission has been completed."
@@ -418,6 +421,20 @@ pub fn draw_game_over_screen(state: &GameState, game_data: Option<&GameData>) {
             true,
             ButtonTone::Warning,
         );
+    }
+
+    if let Some(lines) = epilogue {
+        for (index, line) in lines.iter().enumerate() {
+            let line = fit_text_to_width(line, 700.0, 20.0);
+            let dims = measure_ui_text(&line, None, 20, 1.0);
+            draw_ui_text(
+                &line,
+                screen_center_x - dims.width / 2.0,
+                screen_center_y + 30.0 + index as f32 * 26.0,
+                20.0,
+                LIGHTGRAY,
+            );
+        }
     }
 
     // Instructions

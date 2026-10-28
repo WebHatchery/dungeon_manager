@@ -18,6 +18,18 @@ impl GameState {
             .filter(|briefing| !briefing.is_empty())
     }
 
+    /// The campaign's closing lines, once the player has won its last mission.
+    pub fn campaign_epilogue<'a>(&self, game_data: &'a GameData) -> Option<&'a [String]> {
+        if !self.victory {
+            return None;
+        }
+        let progress = self.campaign_progress.as_ref()?;
+        let campaign = game_data.campaigns.get(&progress.campaign_id)?;
+        let finale = campaign.missions.last()?;
+        (progress.completed_missions.contains(&finale.id) && !campaign.epilogue.is_empty())
+            .then_some(campaign.epilogue.as_slice())
+    }
+
     pub fn has_pending_campaign_mission(&self, game_data: &GameData) -> bool {
         let Some(progress) = &self.campaign_progress else {
             return false;

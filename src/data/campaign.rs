@@ -14,6 +14,9 @@ pub struct CampaignDefinition {
     pub missions: Vec<CampaignMission>,
     #[serde(default)]
     pub persistent_unlocks: CampaignUnlocks,
+    /// Closing lines shown on the victory screen once the final mission falls.
+    #[serde(default)]
+    pub epilogue: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
