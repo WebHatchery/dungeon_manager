@@ -205,7 +205,9 @@ impl Game {
     ) {
         use crate::state::save_system::{save_game, should_autosave, SaveSlot};
 
-        let running = should_autosave(state);
+        // A screenshot capture drives the real game loop; it must never write
+        // over the player's autosave.
+        let running = should_autosave(state) && !capture::capture_requested("DUNGEON_MANAGER");
         let result = autosave.update(dt, running, || save_game(state, SaveSlot::Auto));
 
         match result {

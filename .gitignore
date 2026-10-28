@@ -13,3 +13,12 @@ dist/
 .vscode
 .gemini
 nul
+
+# Screenshot-capture scratch output (scripts/capture_ui.ps1 -OutputDir ...)
+docs/verification/_tmp/
+.capture_manifest_*.tsv
+
+# Local runtime output; saves live in the app-data folder, not the repo
+/results.json
+/save_slot_1.json
+/saves/

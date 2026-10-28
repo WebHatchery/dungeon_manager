@@ -28,15 +28,17 @@ pub fn load_or_new(campaign: &CampaignDefinition) -> CampaignProgress {
 }
 
 pub fn save(progress: &CampaignProgress) {
-    // Unit tests complete missions constantly; they must not overwrite a
-    // player's real progress file.
+    // Unit tests complete missions constantly, and staged capture scenes win
+    // them; neither may overwrite a player's real progress file.
     #[cfg(not(test))]
-    if let Err(error) = macroquad_toolkit::persistence::save_json_key(
-        GAME_NAME,
-        &key(&progress.campaign_id),
-        progress,
-    ) {
-        eprintln!("Failed to save campaign progress: {error}");
+    if !macroquad_toolkit::capture::capture_requested("DUNGEON_MANAGER") {
+        if let Err(error) = macroquad_toolkit::persistence::save_json_key(
+            GAME_NAME,
+            &key(&progress.campaign_id),
+            progress,
+        ) {
+            eprintln!("Failed to save campaign progress: {error}");
+        }
     }
     #[cfg(test)]
     let _ = progress;
