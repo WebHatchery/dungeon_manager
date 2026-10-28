@@ -156,6 +156,35 @@ impl ScenarioObjective {
             ScenarioObjective::Custom { id, .. } => id.clone(),
         }
     }
+
+    /// Player-facing one-line description for the mission objectives panel.
+    pub fn display_text(&self) -> String {
+        match self {
+            ScenarioObjective::DestroyHeart { owner } => match owner {
+                OwnerId::Player => "Keep your Dungeon Heart alive".to_string(),
+                OwnerId::RivalKeeper(index) => format!("Destroy rival keeper {index}'s heart"),
+                _ => "Destroy the enemy heart".to_string(),
+            },
+            ScenarioObjective::SurviveTime { seconds } => {
+                format!(
+                    "Survive {}:{:02}",
+                    (*seconds as u32) / 60,
+                    (*seconds as u32) % 60
+                )
+            }
+            ScenarioObjective::DestroyAllHeroBuildings => "Destroy every hero building".to_string(),
+            ScenarioObjective::ConvertHeroes { amount } => {
+                format!("Convert {amount} captured heroes")
+            }
+            ScenarioObjective::SacrificeCreatures { amount } => {
+                format!("Sacrifice {amount} creatures at a temple")
+            }
+            ScenarioObjective::GatherResource { resource, amount } => {
+                format!("Hold {amount} {resource}")
+            }
+            ScenarioObjective::Custom { description, .. } => description.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

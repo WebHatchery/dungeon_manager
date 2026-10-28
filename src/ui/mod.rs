@@ -14,4 +14,5 @@ pub mod sidebar_renderer;
 pub mod slot_browser;
 pub mod tooltips;
 pub mod trap_buttons;
+pub mod mission_objectives;
 pub mod tutorial;

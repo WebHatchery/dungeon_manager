@@ -367,6 +367,7 @@ impl GameRenderer {
         // Tutorial objective panel
         if let Some(data) = game_data {
             crate::ui::tutorial::draw_tutorial_panel(state, data);
+            crate::ui::mission_objectives::draw_mission_objectives(state, data);
         }
 
         // Scenario intro overlay (blocks the view until dismissed)

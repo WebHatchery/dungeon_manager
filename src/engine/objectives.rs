@@ -59,6 +59,39 @@ fn update_scenario_objectives(state: &mut GameState, game_data: &GameData) -> bo
     }
 }
 
+/// Current/target counters for objectives that accumulate, for the HUD panel.
+pub fn objective_progress(objective: &ScenarioObjective, state: &GameState) -> Option<(u32, u32)> {
+    match objective {
+        ScenarioObjective::SurviveTime { seconds } => {
+            Some(((state.time_elapsed.min(*seconds)) as u32, *seconds as u32))
+        }
+        ScenarioObjective::ConvertHeroes { amount } => {
+            Some((state.conversion_count.min(*amount), *amount))
+        }
+        ScenarioObjective::SacrificeCreatures { amount } => {
+            Some((state.sacrifice_count.min(*amount), *amount))
+        }
+        ScenarioObjective::GatherResource { resource, amount } => Some((
+            current_resource_amount(state, resource).clamp(0, *amount) as u32,
+            (*amount).max(0) as u32,
+        )),
+        _ => None,
+    }
+}
+
+/// Whether the mission has already banked this objective (sticky once met).
+pub fn objective_done(objective: &ScenarioObjective, state: &GameState) -> bool {
+    state
+        .scenario_runtime
+        .as_ref()
+        .map(|runtime| {
+            runtime
+                .completed_objectives
+                .contains(&objective.objective_id())
+        })
+        .unwrap_or(false)
+}
+
 fn objective_is_complete(
     objective: &ScenarioObjective,
     state: &GameState,
