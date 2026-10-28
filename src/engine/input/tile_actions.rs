@@ -228,10 +228,10 @@ pub(super) fn handle_tile_interaction(
             }
         }
         InteractionMode::SetAttackMarker => {
-            handle_set_marker(state, "attack", tile_pos);
+            handle_set_marker(state, game_data, "attack", tile_pos);
         }
         InteractionMode::SetDefendMarker => {
-            handle_set_marker(state, "defend", tile_pos);
+            handle_set_marker(state, game_data, "defend", tile_pos);
         }
         InteractionMode::SaveGame => {
             // No tile interaction for SaveGame
@@ -301,7 +301,12 @@ pub(super) fn handle_tile_interaction(
     }
 }
 
-fn handle_set_marker(state: &mut GameState, marker_type: &str, tile_pos: TilePos) {
+fn handle_set_marker(
+    state: &mut GameState,
+    game_data: &GameData,
+    marker_type: &str,
+    tile_pos: TilePos,
+) {
     let (width, height) = crate::engine::tile_grid::get_grid_dimensions(&state.dungeon.grid);
     // Allow placing markers on any walkable tile or known tile?
     // For now, allow anywhere inside map bounds
@@ -311,12 +316,46 @@ fn handle_set_marker(state: &mut GameState, marker_type: &str, tile_pos: TilePos
             state.attack_marker = Some(tile_pos);
             eprintln!("Attack marker set at {:?}", tile_pos);
             state.notifications.info("Attack flag updated");
+            if !marker_is_reachable(state, game_data, tile_pos) {
+                state
+                    .notifications
+                    .warning("No path to that flag yet - dig a route for your forces.");
+            }
         } else if marker_type == "defend" {
             state.defend_marker = Some(tile_pos);
             eprintln!("Defend marker set at {:?}", tile_pos);
             state.notifications.info("Defend flag updated");
         }
     }
+}
+
+/// Whether walkers from the player's heart can reach, or stand beside, `target`
+/// over tiles that are already open. Solid earth between the two means the
+/// army needs imps to dig a route first.
+fn marker_is_reachable(state: &GameState, game_data: &GameData, target: TilePos) -> bool {
+    use crate::engine::pathfinding::{find_path, Heuristic, PathfindingGrid, Pos};
+    let Some(start) = state.find_dungeon_heart_position() else {
+        return true;
+    };
+    let mut grid = PathfindingGrid::new(state.dungeon.width, state.dungeon.height);
+    for y in 0..state.dungeon.height {
+        for x in 0..state.dungeon.width {
+            if let Some(tile) = state.dungeon.get_tile(TilePos::new(x as i32, y as i32)) {
+                grid.set_walkable(
+                    Pos::new(x as i32, y as i32),
+                    crate::engine::tile_types::is_tile_walkable(tile, game_data),
+                );
+            }
+        }
+    }
+    let from = Pos::new(start.x, start.y);
+    [(0, 0), (0, 1), (0, -1), (1, 0), (-1, 0)]
+        .iter()
+        .map(|(dx, dy)| Pos::new(target.x + dx, target.y + dy))
+        .any(|goal| {
+            grid.is_walkable(goal)
+                && find_path(from, goal, &grid, Heuristic::Manhattan, false).is_some()
+        })
 }
 
 /// Check if the current interaction mode supports drag selection
