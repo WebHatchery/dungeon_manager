@@ -53,8 +53,17 @@ pub fn plan_rival_keepers(state: &GameState) -> Vec<RivalKeeperPlan> {
 
 pub fn update_rival_keeper_ai(state: &mut GameState, game_data: &GameData, dt: f32) {
     let mut decisions = Vec::new();
+    let fallen: Vec<bool> = state
+        .rival_keepers
+        .keepers
+        .iter()
+        .map(|keeper| heart_has_fallen(state, &keeper.owner))
+        .collect();
 
     for (index, keeper) in state.rival_keepers.keepers.iter_mut().enumerate() {
+        if fallen[index] {
+            continue;
+        }
         keeper.next_decision_time -= dt;
         keeper.next_attack_time = (keeper.next_attack_time - dt).max(0.0);
         if keeper.next_decision_time <= 0.0 {
@@ -66,6 +75,28 @@ pub fn update_rival_keeper_ai(state: &mut GameState, game_data: &GameData, dt: f
     for index in decisions {
         execute_keeper_decision(state, game_data, index);
     }
+}
+
+/// A keeper whose heart structure has been razed is finished: it stops
+/// building, reinforcing and raiding. Keepers with no heart structure (maps
+/// that never placed one) are never considered fallen.
+fn heart_has_fallen(state: &GameState, owner: &OwnerId) -> bool {
+    let mut hearts = state.entities.all().filter(|entity| {
+        entity.owner == *owner
+            && matches!(
+                &entity.entity_type,
+                crate::state::entities::EntityType::Structure(structure)
+                    if structure.building_id == "dungeon_heart"
+            )
+    });
+    let mut saw_heart = false;
+    for heart in hearts.by_ref() {
+        saw_heart = true;
+        if heart.is_alive() {
+            return false;
+        }
+    }
+    saw_heart
 }
 
 fn execute_keeper_decision(state: &mut GameState, game_data: &GameData, keeper_index: usize) {
