@@ -105,7 +105,9 @@
         "speed_boost": { "available": true, "unlocked": true, "owner": "player" },
         "lightning_strike": { "available": true, "unlocked": true, "owner": "player" },
         "call_to_arms": { "available": true, "unlocked": true, "owner": "player" },
-        "iron_skin": { "available": true, "unlocked": true, "owner": "player" }
+        "iron_skin": { "available": true, "unlocked": true, "owner": "player" },
+        "corrupt_land": { "available": true, "unlocked": true, "owner": "player" },
+        "possess": { "available": true, "unlocked": true, "owner": "player" }
       },
       "traps": {
         "door": { "available": true, "unlocked": true, "owner": "player" },

@@ -86,7 +86,8 @@
         "mana_well": { "available": true, "unlocked": false, "owner": "player" },
         "kennel": { "available": true, "unlocked": true, "owner": "player" },
         "barracks": { "available": true, "unlocked": true, "owner": "player" },
-        "scavenger": { "available": true, "unlocked": true, "owner": "player" }
+        "scavenger": { "available": true, "unlocked": true, "owner": "player" },
+        "prison": { "available": true, "unlocked": true, "owner": "player" }
       },
       "spells": {
         "summon_imps": { "available": true, "unlocked": true, "owner": "player" },
