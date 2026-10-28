@@ -62,6 +62,23 @@ impl GameState {
         Some(state)
     }
 
+    /// Whether a lost campaign mission can be retried. Cheap enough to ask
+    /// every frame, unlike `retry_campaign_mission`, which builds a game.
+    pub fn can_retry_campaign_mission(&self, game_data: &GameData) -> bool {
+        !self.victory && self.active_campaign_mission(game_data).is_some()
+    }
+
+    /// A fresh attempt at the campaign mission that was just lost.
+    pub fn retry_campaign_mission(&self, game_data: &GameData) -> Option<Self> {
+        if self.victory {
+            return None;
+        }
+        let mut retry =
+            Self::new_for_campaign_progress(game_data, self.campaign_progress.as_ref()?.clone())?;
+        retry.difficulty = self.difficulty;
+        Some(retry)
+    }
+
     pub fn start_pending_campaign_mission(&self, game_data: &GameData) -> Option<Self> {
         if !self.has_pending_campaign_mission(game_data) {
             return None;

@@ -360,6 +360,10 @@ pub fn draw_game_over_screen(state: &GameState, game_data: Option<&GameData>) {
         && game_data
             .map(|data| state.has_pending_campaign_mission(data))
             .unwrap_or(false);
+    let can_retry = !state.victory
+        && game_data
+            .map(|data| state.can_retry_campaign_mission(data))
+            .unwrap_or(false);
     let epilogue = game_data.and_then(|data| state.campaign_epilogue(data));
     let subtitle = if state.victory {
         if epilogue.is_some() {
@@ -415,8 +419,16 @@ pub fn draw_game_over_screen(state: &GameState, game_data: Option<&GameData>) {
             ButtonTone::Positive,
         );
     } else {
+        if can_retry {
+            draw_menu_button(
+                menu_layout::game_over_retry(),
+                "RETRY MISSION",
+                true,
+                ButtonTone::Positive,
+            );
+        }
         draw_menu_button(
-            menu_layout::game_over_return_menu(),
+            menu_layout::game_over_return_menu(can_retry),
             "RETURN TO MENU",
             true,
             ButtonTone::Warning,
@@ -440,6 +452,8 @@ pub fn draw_game_over_screen(state: &GameState, game_data: Option<&GameData>) {
     // Instructions
     let instr = if has_next_mission {
         "Press Enter for next mission or ESC for menu"
+    } else if can_retry {
+        "Press Enter to retry or ESC for menu"
     } else {
         "Tap Return to Menu or press ESC"
     };

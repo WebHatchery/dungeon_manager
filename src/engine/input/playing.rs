@@ -119,11 +119,28 @@ pub(super) fn handle_playing(
             }
         }
 
+        let can_retry = state.can_retry_campaign_mission(game_data);
+        if can_retry {
+            let retry_rect = crate::ui::menu_layout::game_over_retry();
+            let mouse_pos = mouse_position();
+            let retry_clicked = is_mouse_button_pressed(MouseButton::Left)
+                && retry_rect.contains(vec2(mouse_pos.0, mouse_pos.1));
+            if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) || retry_clicked {
+                if let Some(retry_state) = state.retry_campaign_mission(game_data) {
+                    *state = retry_state;
+                    *interaction_mode = InteractionMode::None;
+                    sidebar.clear_selection();
+                    drag_selection.cancel();
+                }
+                return false;
+            }
+        }
+
         if is_key_pressed(KeyCode::Escape) {
             return true; // Return to Main Menu
         }
         if !state.victory || !state.has_pending_campaign_mission(game_data) {
-            let rect = crate::ui::menu_layout::game_over_return_menu();
+            let rect = crate::ui::menu_layout::game_over_return_menu(can_retry);
             let mouse = mouse_position();
             if is_mouse_button_released(MouseButton::Left) && rect.contains(vec2(mouse.0, mouse.1))
             {

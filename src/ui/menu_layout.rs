@@ -181,11 +181,22 @@ pub fn game_over_next_mission() -> Rect {
     )
 }
 
-/// Return button for defeat and the final victory screen.
-pub fn game_over_return_menu() -> Rect {
+/// "Retry Mission" button on a campaign defeat screen.
+pub fn game_over_retry() -> Rect {
     Rect::new(
         screen_width() / 2.0 - BUTTON_WIDTH / 2.0,
         screen_height() / 2.0 + 70.0,
+        BUTTON_WIDTH,
+        BUTTON_HEIGHT,
+    )
+}
+
+/// Return button for defeat and the final victory screen. `below_retry`
+/// drops it under the retry button on a campaign defeat.
+pub fn game_over_return_menu(below_retry: bool) -> Rect {
+    Rect::new(
+        screen_width() / 2.0 - BUTTON_WIDTH / 2.0,
+        screen_height() / 2.0 + if below_retry { 134.0 } else { 70.0 },
         BUTTON_WIDTH,
         BUTTON_HEIGHT,
     )
