@@ -99,6 +99,22 @@ pub fn mission_select_back() -> Rect {
     )
 }
 
+/// Reset-campaign button, to the right of BACK.
+pub fn mission_select_reset() -> Rect {
+    let back = mission_select_back();
+    // Beside BACK when the screen is wide enough, otherwise stacked above it.
+    if screen_width() >= back.x + back.w + 20.0 + BUTTON_WIDTH + 20.0 {
+        Rect::new(back.x + back.w + 20.0, back.y, BUTTON_WIDTH, BUTTON_HEIGHT)
+    } else {
+        Rect::new(
+            back.x,
+            back.y - BUTTON_HEIGHT - 12.0,
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT,
+        )
+    }
+}
+
 pub struct PauseMenuLayout {
     pub resume: Rect,
     pub save: Rect,

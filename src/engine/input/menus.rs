@@ -193,6 +193,13 @@ pub(super) fn handle_mission_select(
         return;
     }
 
+    if clicked(crate::ui::menu_layout::mission_select_reset()) {
+        if crate::state::campaign_store::confirm_reset() {
+            *phase = GamePhase::MissionSelect(crate::state::campaign_store::reset(campaign));
+        }
+        return;
+    }
+
     let entries = progress.mission_menu(campaign);
     let rows = crate::ui::menu_layout::mission_select_rows(entries.len());
     for (entry, rect) in entries.iter().zip(rows.iter()) {

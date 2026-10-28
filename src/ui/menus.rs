@@ -172,6 +172,21 @@ pub fn draw_mission_select(
         true,
         ButtonTone::Muted,
     );
+    let armed = crate::state::campaign_store::reset_is_armed();
+    draw_menu_button(
+        menu_layout::mission_select_reset(),
+        if armed {
+            "CLICK AGAIN TO RESET"
+        } else {
+            "RESET CAMPAIGN"
+        },
+        true,
+        if armed {
+            ButtonTone::Danger
+        } else {
+            ButtonTone::Muted
+        },
+    );
 }
 
 /// Draw the skirmish/sandbox setup screen. The two option rows show the

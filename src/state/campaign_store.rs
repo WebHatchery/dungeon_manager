@@ -50,3 +50,36 @@ fn is_usable(progress: &CampaignProgress, campaign: &CampaignDefinition) -> bool
         && progress.completed_missions.iter().all(known)
         && progress.unlocked_missions.iter().all(known)
 }
+
+/// Seconds a first reset click stays armed waiting for its confirming click.
+const RESET_CONFIRM_SECONDS: f64 = 4.0;
+
+thread_local! {
+    static RESET_ARMED_UNTIL: std::cell::Cell<f64> = const { std::cell::Cell::new(0.0) };
+}
+
+fn now() -> f64 {
+    macroquad::time::get_time()
+}
+
+pub fn reset_is_armed() -> bool {
+    RESET_ARMED_UNTIL.with(|until| now() < until.get())
+}
+
+/// Register a click on the reset button. The first click arms it and returns
+/// false; a second click inside the window returns true.
+pub fn confirm_reset() -> bool {
+    if reset_is_armed() {
+        RESET_ARMED_UNTIL.with(|until| until.set(0.0));
+        return true;
+    }
+    RESET_ARMED_UNTIL.with(|until| until.set(now() + RESET_CONFIRM_SECONDS));
+    false
+}
+
+/// Wipe stored progress and return a fresh campaign start.
+pub fn reset(campaign: &CampaignDefinition) -> CampaignProgress {
+    let fresh = CampaignProgress::new(campaign);
+    save(&fresh);
+    fresh
+}
