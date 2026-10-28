@@ -157,15 +157,17 @@ pub fn draw_mission_select(
             .filter(|b| !b.is_empty())
     });
     if let Some(text) = briefing {
-        let wrapped = fit_text_to_width(text, 720.0, 18.0);
-        let dims = measure_ui_text(&wrapped, None, 18, 1.0);
-        draw_ui_text(
-            &wrapped,
-            screen_width() / 2.0 - dims.width / 2.0,
-            screen_height() - 120.0,
-            18.0,
-            colors::TEXT_DIM,
-        );
+        let width = (screen_width() - 40.0).min(720.0);
+        for (index, line) in wrap_text(text, width, 18.0).iter().take(2).enumerate() {
+            let dims = measure_ui_text(line, None, 18, 1.0);
+            draw_ui_text(
+                line,
+                screen_width() / 2.0 - dims.width / 2.0,
+                screen_height() - 128.0 + index as f32 * 20.0,
+                18.0,
+                colors::TEXT_DIM,
+            );
+        }
     }
 
     draw_menu_button(
