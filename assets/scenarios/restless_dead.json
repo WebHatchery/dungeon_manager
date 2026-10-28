@@ -117,6 +117,10 @@
       },
       {
         "type": "destroy_all_hero_buildings"
+      },
+      {
+        "type": "destroy_heart",
+        "owner": { "rival_keeper": 1 }
       }
     ],
     "events": [
