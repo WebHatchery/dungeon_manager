@@ -26,6 +26,7 @@
                      rock and creatures do not dig, so the raiders follow the
                      corridor the heroes tunnel in through. Reaches a mission
                      victory around 6600 frames.
+      objectives   - a later campaign mission with the Mission Objectives panel
       defeat       - the campaign defeat screen (retry / return buttons)
       campaign_end - the final-victory screen with the campaign epilogue
       skirmish, settings, missionselect - the other menu screens

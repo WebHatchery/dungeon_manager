@@ -1,5 +1,6 @@
 //! Mission objectives panel for authored campaign scenarios
 
+use crate::data::scenario::ScenarioObjective;
 use crate::data::GameData;
 use crate::engine::{objectives, tutorial_system};
 use crate::state::game_state::GameState;
@@ -55,7 +56,12 @@ pub fn draw_mission_objectives(state: &GameState, game_data: &GameData) {
         if let (false, Some((current, target))) =
             (done, objectives::objective_progress(objective, state))
         {
-            text.push_str(&format!(" ({current}/{target})"));
+            if matches!(objective, ScenarioObjective::SurviveTime { .. }) {
+                let left = target.saturating_sub(current);
+                text.push_str(&format!(" ({}:{:02} left)", left / 60, left % 60));
+            } else {
+                text.push_str(&format!(" ({current}/{target})"));
+            }
         }
         let color = if done { colors::TEXT_DIM } else { colors::TEXT };
         draw_ui_text(&text, rect.x + 12.0, y, 16.0, color);

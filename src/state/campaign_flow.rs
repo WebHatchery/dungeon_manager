@@ -58,6 +58,12 @@ impl GameState {
 
         let mut state = Self::new_for_scenario(game_data, &mission.scenario_id);
         state.apply_campaign_unlocks(&progress.persistent_unlocks);
+        // The lessons teach the opening mission; once a mission has been won
+        // the player knows the basics. The scenario intro still plays, and the
+        // objectives panel takes over the tutorial's corner of the screen.
+        if !progress.completed_missions.is_empty() {
+            state.tutorial.complete = true;
+        }
         state.campaign_progress = Some(progress);
         Some(state)
     }
