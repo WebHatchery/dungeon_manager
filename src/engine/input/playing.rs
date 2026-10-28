@@ -151,7 +151,12 @@ pub(super) fn handle_playing(
             return true; // Return to Main Menu
         }
         if !state.victory || !state.has_pending_campaign_mission(game_data) {
-            let rect = crate::ui::menu_layout::game_over_return_menu(can_retry);
+            let rect = crate::ui::menu_layout::game_over_return_menu(
+                crate::ui::menu_layout::game_over_return_offset(
+                    can_retry,
+                    state.campaign_epilogue(game_data).is_some(),
+                ),
+            );
             let mouse = mouse_position();
             if is_mouse_button_released(MouseButton::Left) && rect.contains(vec2(mouse.0, mouse.1))
             {

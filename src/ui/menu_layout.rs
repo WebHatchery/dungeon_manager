@@ -191,12 +191,24 @@ pub fn game_over_retry() -> Rect {
     )
 }
 
-/// Return button for defeat and the final victory screen. `below_retry`
-/// drops it under the retry button on a campaign defeat.
-pub fn game_over_return_menu(below_retry: bool) -> Rect {
+/// Vertical offset from screen centre of the return button. It drops under
+/// the retry button on a campaign defeat, and under the epilogue text on the
+/// final victory.
+pub fn game_over_return_offset(below_retry: bool, has_epilogue: bool) -> f32 {
+    if below_retry {
+        134.0
+    } else if has_epilogue {
+        150.0
+    } else {
+        70.0
+    }
+}
+
+/// Return button for defeat and the final victory screen.
+pub fn game_over_return_menu(offset: f32) -> Rect {
     Rect::new(
         screen_width() / 2.0 - BUTTON_WIDTH / 2.0,
-        screen_height() / 2.0 + if below_retry { 134.0 } else { 70.0 },
+        screen_height() / 2.0 + offset,
         BUTTON_WIDTH,
         BUTTON_HEIGHT,
     )

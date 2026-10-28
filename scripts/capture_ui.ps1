@@ -26,6 +26,8 @@
                      rock and creatures do not dig, so the raiders follow the
                      corridor the heroes tunnel in through. Reaches a mission
                      victory around 6600 frames.
+      defeat       - the campaign defeat screen (retry / return buttons)
+      campaign_end - the final-victory screen with the campaign epilogue
       skirmish, settings, missionselect - the other menu screens
 
     To see engine tracing during a capture, set DUNGEON_MANAGER_LOG (a

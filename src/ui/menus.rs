@@ -10,7 +10,9 @@ use crate::ui::core::colors;
 use crate::ui::menu_layout;
 use crate::ui::resources::GraphicsCache;
 use macroquad::prelude::*;
-use macroquad_toolkit::ui::{button_rect_tone, draw_ui_text, measure_ui_text, ButtonTone};
+use macroquad_toolkit::ui::{
+    button_rect_tone, draw_ui_text, measure_ui_text, wrap_text, ButtonTone,
+};
 
 /// Draw a menu button for visuals only; clicks are handled by the input
 /// layer against the same `menu_layout` rects.
@@ -364,6 +366,10 @@ pub fn draw_game_over_screen(state: &GameState, game_data: Option<&GameData>) {
         && game_data
             .map(|data| state.can_retry_campaign_mission(data))
             .unwrap_or(false);
+    let return_offset = menu_layout::game_over_return_offset(
+        can_retry,
+        game_data.is_some_and(|data| state.campaign_epilogue(data).is_some()),
+    );
     let epilogue = game_data.and_then(|data| state.campaign_epilogue(data));
     let subtitle = if state.victory {
         if epilogue.is_some() {
@@ -428,7 +434,7 @@ pub fn draw_game_over_screen(state: &GameState, game_data: Option<&GameData>) {
             );
         }
         draw_menu_button(
-            menu_layout::game_over_return_menu(can_retry),
+            menu_layout::game_over_return_menu(return_offset),
             "RETURN TO MENU",
             true,
             ButtonTone::Warning,
@@ -436,16 +442,12 @@ pub fn draw_game_over_screen(state: &GameState, game_data: Option<&GameData>) {
     }
 
     if let Some(lines) = epilogue {
-        for (index, line) in lines.iter().enumerate() {
-            let line = fit_text_to_width(line, 700.0, 20.0);
-            let dims = measure_ui_text(&line, None, 20, 1.0);
-            draw_ui_text(
-                &line,
-                screen_center_x - dims.width / 2.0,
-                screen_center_y + 30.0 + index as f32 * 26.0,
-                20.0,
-                LIGHTGRAY,
-            );
+        let wrap_width = (screen_width() - 60.0).min(860.0);
+        let mut y = screen_center_y + 20.0;
+        for line in lines.iter().flat_map(|line| wrap_text(line, wrap_width, 18.0)) {
+            let dims = measure_ui_text(&line, None, 18, 1.0);
+            draw_ui_text(&line, screen_center_x - dims.width / 2.0, y, 18.0, LIGHTGRAY);
+            y += 22.0;
         }
     }
 
@@ -464,7 +466,7 @@ pub fn draw_game_over_screen(state: &GameState, game_data: Option<&GameData>) {
         if has_next_mission {
             screen_center_y + 180.0
         } else {
-            screen_center_y + 145.0
+            screen_center_y + return_offset + menu_layout::BUTTON_HEIGHT + 34.0
         },
         30.0,
         GRAY,

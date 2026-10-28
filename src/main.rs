@@ -327,6 +327,26 @@ impl Game {
                         seed_dig_orders(&mut game_state, data);
                     }
 
+                    // End-of-mission screens: the sim never reaches them in a
+                    // capture, so stage the result directly.
+                    if scene == "defeat" || scene == "campaign_end" {
+                        game_state.tutorial.intro_dismissed = true;
+                        game_state.game_over = true;
+                        game_state.victory = scene == "campaign_end";
+                    }
+                    if scene == "campaign_end" {
+                        if let Some(campaign) = data.campaigns.get("deep_dominion") {
+                            let mut progress = crate::data::campaign::CampaignProgress::new(campaign);
+                            for mission in &campaign.missions {
+                                progress.complete_mission(campaign, &mission.id);
+                            }
+                            if let Some(staged) = GameState::new_for_campaign_progress(data, progress)
+                            {
+                                game_state.campaign_progress = staged.campaign_progress;
+                            }
+                        }
+                    }
+
                     if scene == "wave" || scene == "raid" {
                         // The first wave is authored 600s out, which is 36,000
                         // frames — far past any practical capture. Pull it
